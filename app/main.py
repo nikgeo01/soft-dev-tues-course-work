@@ -3,6 +3,7 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 
+from app.auth.router import router as auth_router
 from app.common.error_handlers import register_error_handlers
 from app.database import engine
 
@@ -20,6 +21,7 @@ def create_app() -> FastAPI:
         lifespan=lifespan,
     )
     register_error_handlers(app)
+    app.include_router(auth_router)
 
     @app.get("/health")
     async def health_check() -> dict[str, str]:

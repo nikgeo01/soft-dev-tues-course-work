@@ -8,6 +8,15 @@ class AppException(Exception):
         super().__init__(message)
 
 
+class UnauthorizedException(AppException):
+    def __init__(
+        self,
+        code: str = "UNAUTHORIZED",
+        message: str = "Authentication required or invalid.",
+    ) -> None:
+        super().__init__(401, code, message)
+
+
 class NotFoundException(AppException):
     def __init__(
         self,
