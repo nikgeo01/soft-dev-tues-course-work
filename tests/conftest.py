@@ -8,6 +8,7 @@ from sqlalchemy import event
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
 import app.auth.service as auth_service
+import app.database as app_database
 from app.database import Base
 from app.dependencies import get_db
 from app.main import create_app
@@ -57,7 +58,11 @@ async def db_session(
 @pytest_asyncio.fixture
 async def client(
     session_factory: async_sessionmaker[AsyncSession],
+    monkeypatch,
 ) -> AsyncGenerator[AsyncClient, None]:
+    # Schedule promotion uses `async_session()` in a side session; align with test DB.
+    monkeypatch.setattr(app_database, "async_session", session_factory)
+
     app = create_app()
 
     async def override_get_db() -> AsyncGenerator[AsyncSession, None]:

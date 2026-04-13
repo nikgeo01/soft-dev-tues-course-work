@@ -1,4 +1,4 @@
-.PHONY: install dev test lint format migrate migration
+.PHONY: install dev test lint format migrate migration seed
 
 # Prefer project venv when present so `make test` works after `make install`.
 PYTHON := $(shell if [ -x .venv/bin/python3 ]; then echo .venv/bin/python3; else command -v python3; fi)
@@ -27,3 +27,6 @@ migrate:
 
 migration:
 	@read -p "Migration message: " msg; $(PYTHON) -m alembic revision --autogenerate -m "$$msg"
+
+seed:
+	$(PYTHON) scripts/seed.py

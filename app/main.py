@@ -6,14 +6,17 @@ from fastapi import FastAPI
 from app.appointments.router import router as appointments_router
 from app.auth.router import router as auth_router
 from app.common.error_handlers import register_error_handlers
-from app.database import engine
+from app.database import async_session, engine
 from app.doctors.router import router as doctors_router
 from app.patients.router import router as patients_router
 from app.schedules.router import router as schedules_router
+from app.schedules.service import apply_pending_permanent_changes
 
 
 @asynccontextmanager
 async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
+    async with async_session() as session:
+        await apply_pending_permanent_changes(session)
     yield
     await engine.dispose()
 

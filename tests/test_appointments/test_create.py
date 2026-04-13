@@ -40,6 +40,8 @@ async def test_create_outside_working_hours(client: AsyncClient) -> None:
     patient_token, _patient_id = await register_patient(client, doctor_id)
     start = datetime.now(timezone.utc) + timedelta(hours=48)
     start = start.replace(hour=22, minute=0, second=0, microsecond=0)
+    while start.weekday() > 4:
+        start += timedelta(days=1)
     end = start + timedelta(hours=1)
     payload = {
         "doctor_id": doctor_id,
@@ -58,9 +60,16 @@ async def test_create_outside_working_hours(client: AsyncClient) -> None:
 async def test_create_less_than_24h(client: AsyncClient) -> None:
     _doctor_token, doctor_id = await register_doctor(client)
     patient_token, _patient_id = await register_patient(client, doctor_id)
+    start = datetime.now(timezone.utc) + timedelta(hours=2)
+    end = start + timedelta(hours=1)
+    payload = {
+        "doctor_id": doctor_id,
+        "start_datetime": start.isoformat(),
+        "end_datetime": end.isoformat(),
+    }
     resp = await client.post(
         "/appointments",
-        json=create_appointment_payload(doctor_id, hours_from_now=2),
+        json=payload,
         headers=auth_header(patient_token),
     )
     assert resp.status_code == 422
@@ -72,6 +81,8 @@ async def test_create_overlapping(client: AsyncClient) -> None:
     patient_token, _patient_id = await register_patient(client, doctor_id)
     start = datetime.now(timezone.utc) + timedelta(hours=72)
     start = start.replace(hour=10, minute=0, second=0, microsecond=0)
+    while start.weekday() > 4:
+        start += timedelta(days=1)
     end = start + timedelta(hours=1)
     first_payload = {
         "doctor_id": doctor_id,

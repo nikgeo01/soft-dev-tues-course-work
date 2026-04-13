@@ -51,10 +51,26 @@ def create_working_hours_payload() -> list[dict[str, object]]:
     ]
 
 
+def _next_weekday_at(hour: int) -> datetime:
+    """Return the next Monday-Friday date at the given hour (UTC), at least 48h away."""
+    now = datetime.now(timezone.utc)
+    candidate = (now + timedelta(hours=48)).replace(
+        hour=hour, minute=0, second=0, microsecond=0
+    )
+    while candidate.weekday() > 4:
+        candidate += timedelta(days=1)
+    if candidate - now < timedelta(hours=24):
+        candidate += timedelta(days=1)
+        while candidate.weekday() > 4:
+            candidate += timedelta(days=1)
+    return candidate
+
+
 def create_appointment_payload(
-    doctor_id: int, hours_from_now: int = 48
+    doctor_id: int,
+    hours_from_now: int = 48,
 ) -> dict[str, str | int]:
-    start = datetime.now(timezone.utc) + timedelta(hours=hours_from_now)
+    start = _next_weekday_at(10)
     end = start + timedelta(hours=1)
     return {
         "doctor_id": doctor_id,
