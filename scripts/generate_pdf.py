@@ -10,7 +10,10 @@ from __future__ import annotations
 import os
 import textwrap
 
-from fpdf import FPDF
+from fpdf import FPDF  # type: ignore[misc]
+
+
+FONT_PATH = "/System/Library/Fonts/Supplemental/Arial Unicode.ttf"
 
 
 class PDF(FPDF):  # type: ignore[misc]
@@ -24,13 +27,15 @@ class PDF(FPDF):  # type: ignore[misc]
         super().__init__()
         self.set_auto_page_break(auto=True, margin=20)
         self.set_margins(self.MARGIN, self.MARGIN, self.MARGIN)
-
-    # ── helpers ──────────────────────────────────────────────────────
+        self.add_font("ArialUni", "", FONT_PATH)
+        self.add_font("ArialUni", "B", FONT_PATH)
+        self.add_font("ArialUni", "I", FONT_PATH)
+        self.add_font("ArialUni", "BI", FONT_PATH)
 
     def _heading(self, level: int, text: str) -> None:
         sizes = {1: 22, 2: 16, 3: 13}
         self.ln(4 if level > 1 else 8)
-        self.set_font("Helvetica", "B", sizes.get(level, 12))
+        self.set_font("ArialUni", "B", sizes.get(level, 12))
         self.set_text_color(*self.COL_HEADER)
         self.multi_cell(0, 8, text)
         if level == 1:
@@ -41,23 +46,23 @@ class PDF(FPDF):  # type: ignore[misc]
         self.ln(2)
 
     def _body(self, text: str) -> None:
-        self.set_font("Helvetica", "", 10)
+        self.set_font("ArialUni", "", 10)
         self.set_text_color(30, 30, 30)
         self.multi_cell(0, 5, text)
         self.ln(1)
 
     def _bold_body(self, text: str) -> None:
-        self.set_font("Helvetica", "B", 10)
+        self.set_font("ArialUni", "B", 10)
         self.set_text_color(30, 30, 30)
         self.multi_cell(0, 5, text)
         self.ln(1)
 
     def _bullet(self, text: str, indent: int = 6) -> None:
-        self.set_font("Helvetica", "", 10)
+        self.set_font("ArialUni", "", 10)
         self.set_text_color(30, 30, 30)
         x = self.get_x()
         self.set_x(x + indent)
-        self.multi_cell(0, 5, f"-  {text}")
+        self.multi_cell(0, 5, f"\u2022  {text}")
         self.ln(0.5)
 
     def _code_block(self, code: str) -> None:
@@ -77,14 +82,14 @@ class PDF(FPDF):  # type: ignore[misc]
             total = sum(col_widths)
             cw = [usable * w / total for w in col_widths]
 
-        self.set_font("Helvetica", "B", 9)
+        self.set_font("ArialUni", "B", 9)
         self.set_fill_color(*self.COL_HEADER)
         self.set_text_color(255, 255, 255)
         for i, h in enumerate(headers):
             self.cell(cw[i], 7, f" {h}", border=1, fill=True)
         self.ln()
 
-        self.set_font("Helvetica", "", 8.5)
+        self.set_font("ArialUni", "", 8.5)
         self.set_text_color(30, 30, 30)
         for ri, row in enumerate(rows):
             if ri % 2 == 0:
@@ -98,21 +103,19 @@ class PDF(FPDF):  # type: ignore[misc]
             self.ln()
         self.ln(3)
 
-    # ── page header / footer ─────────────────────────────────────────
-
     def header(self) -> None:
         if self.page_no() == 1:
             return
-        self.set_font("Helvetica", "I", 8)
+        self.set_font("ArialUni", "I", 8)
         self.set_text_color(130, 130, 130)
-        self.cell(0, 8, "Doctor Visit Booking API  -  Technical Documentation", align="C")
+        self.cell(0, 8, "Doctor Visit Booking API \u2014 \u0422\u0435\u0445\u043d\u0438\u0447\u0435\u0441\u043a\u0430 \u0434\u043e\u043a\u0443\u043c\u0435\u043d\u0442\u0430\u0446\u0438\u044f", align="C")
         self.ln(10)
 
     def footer(self) -> None:
         self.set_y(-15)
-        self.set_font("Helvetica", "I", 8)
+        self.set_font("ArialUni", "I", 8)
         self.set_text_color(150, 150, 150)
-        self.cell(0, 10, f"Page {self.page_no()}/{{nb}}", align="C")
+        self.cell(0, 10, f"\u0421\u0442\u0440\u0430\u043d\u0438\u0446\u0430 {self.page_no()}/{{nb}}", align="C")
 
 
 def build_pdf(output_path: str) -> None:
@@ -124,51 +127,51 @@ def build_pdf(output_path: str) -> None:
     # ═══════════════════════════════════════════════════════════════════
     pdf.add_page()
     pdf.ln(45)
-    pdf.set_font("Helvetica", "B", 30)
+    pdf.set_font("ArialUni", "B", 30)
     pdf.set_text_color(*PDF.COL_HEADER)
     pdf.cell(0, 14, "Doctor Visit Booking API", align="C", new_x="LMARGIN", new_y="NEXT")
     pdf.ln(4)
-    pdf.set_font("Helvetica", "", 16)
+    pdf.set_font("ArialUni", "", 16)
     pdf.set_text_color(*PDF.COL_ACCENT)
-    pdf.cell(0, 10, "Technical Documentation", align="C", new_x="LMARGIN", new_y="NEXT")
+    pdf.cell(0, 10, "\u0422\u0435\u0445\u043d\u0438\u0447\u0435\u0441\u043a\u0430 \u0434\u043e\u043a\u0443\u043c\u0435\u043d\u0442\u0430\u0446\u0438\u044f", align="C", new_x="LMARGIN", new_y="NEXT")
     pdf.ln(12)
     pdf.set_draw_color(*PDF.COL_ACCENT)
     pdf.set_line_width(0.5)
     mid = pdf.w / 2
     pdf.line(mid - 40, pdf.get_y(), mid + 40, pdf.get_y())
     pdf.ln(12)
-    pdf.set_font("Helvetica", "", 11)
+    pdf.set_font("ArialUni", "", 11)
     pdf.set_text_color(80, 80, 80)
-    pdf.cell(0, 7, "REST API for managing doctor visit bookings", align="C", new_x="LMARGIN", new_y="NEXT")
+    pdf.cell(0, 7, "REST API \u0437\u0430 \u0443\u043f\u0440\u0430\u0432\u043b\u0435\u043d\u0438\u0435 \u043d\u0430 \u0437\u0430\u043f\u0438\u0441\u0432\u0430\u043d\u0438\u044f \u043d\u0430 \u043f\u0430\u0446\u0438\u0435\u043d\u0442\u0438 \u043f\u0440\u0438 \u043b\u0435\u043a\u0430\u0440\u0438", align="C", new_x="LMARGIN", new_y="NEXT")
     pdf.cell(0, 7, "FastAPI  |  SQLAlchemy 2.0  |  SQLite  |  JWT Auth", align="C", new_x="LMARGIN", new_y="NEXT")
     pdf.ln(40)
-    pdf.set_font("Helvetica", "I", 10)
+    pdf.set_font("ArialUni", "I", 10)
     pdf.set_text_color(120, 120, 120)
-    pdf.cell(0, 6, "Version 0.1.0", align="C", new_x="LMARGIN", new_y="NEXT")
+    pdf.cell(0, 6, "\u0412\u0435\u0440\u0441\u0438\u044f 0.1.0", align="C", new_x="LMARGIN", new_y="NEXT")
 
     # ═══════════════════════════════════════════════════════════════════
     # TABLE OF CONTENTS
     # ═══════════════════════════════════════════════════════════════════
     pdf.add_page()
-    pdf._heading(1, "Table of Contents")
+    pdf._heading(1, "\u0421\u044a\u0434\u044a\u0440\u0436\u0430\u043d\u0438\u0435")
     toc = [
-        "1. API Usage Guide",
-        "   1.1 Authentication",
-        "   1.2 Doctors",
-        "   1.3 Patients",
-        "   1.4 Working Hours & Schedules",
-        "   1.5 Appointments",
-        "   1.6 Error Codes Reference",
-        "2. Architecture Description",
-        "   2.1 High-Level Architecture",
-        "   2.2 Project Structure",
-        "   2.3 Database Schema (ER Diagram)",
-        "   2.4 Class Diagram",
-        "   2.5 Sequence Diagrams",
-        "3. Self-Analysis",
-        "   3.1 SOLID Principles Adherence",
-        "   3.2 Design Trade-offs",
-        "   3.3 Areas for Improvement",
+        "1. \u0420\u044a\u043a\u043e\u0432\u043e\u0434\u0441\u0442\u0432\u043e \u0437\u0430 \u0438\u0437\u043f\u043e\u043b\u0437\u0432\u0430\u043d\u0435 \u043d\u0430 API",
+        "   1.1 \u0410\u0443\u0442\u0435\u043d\u0442\u0438\u043a\u0430\u0446\u0438\u044f",
+        "   1.2 \u041b\u0435\u043a\u0430\u0440\u0438",
+        "   1.3 \u041f\u0430\u0446\u0438\u0435\u043d\u0442\u0438",
+        "   1.4 \u0420\u0430\u0431\u043e\u0442\u043d\u043e \u0432\u0440\u0435\u043c\u0435 \u0438 \u0433\u0440\u0430\u0444\u0438\u0446\u0438",
+        "   1.5 \u0417\u0430\u043f\u0438\u0441\u0432\u0430\u043d\u0438\u044f (\u0447\u0430\u0441\u043e\u0432\u0435)",
+        "   1.6 \u0421\u043f\u0440\u0430\u0432\u043e\u0447\u043d\u0438\u043a \u043d\u0430 \u043a\u043e\u0434\u043e\u0432\u0435 \u0437\u0430 \u0433\u0440\u0435\u0448\u043a\u0438",
+        "2. \u041e\u043f\u0438\u0441\u0430\u043d\u0438\u0435 \u043d\u0430 \u0430\u0440\u0445\u0438\u0442\u0435\u043a\u0442\u0443\u0440\u0430\u0442\u0430",
+        "   2.1 \u0410\u0440\u0445\u0438\u0442\u0435\u043a\u0442\u0443\u0440\u0430 \u043d\u0430 \u0432\u0438\u0441\u043e\u043a\u043e \u043d\u0438\u0432\u043e",
+        "   2.2 \u0421\u0442\u0440\u0443\u043a\u0442\u0443\u0440\u0430 \u043d\u0430 \u043f\u0440\u043e\u0435\u043a\u0442\u0430",
+        "   2.3 \u0421\u0445\u0435\u043c\u0430 \u043d\u0430 \u0431\u0430\u0437\u0430\u0442\u0430 \u0434\u0430\u043d\u043d\u0438 (ER \u0434\u0438\u0430\u0433\u0440\u0430\u043c\u0430)",
+        "   2.4 \u041a\u043b\u0430\u0441\u043e\u0432\u0430 \u0434\u0438\u0430\u0433\u0440\u0430\u043c\u0430",
+        "   2.5 \u0414\u0438\u0430\u0433\u0440\u0430\u043c\u0438 \u043d\u0430 \u043f\u043e\u0441\u043b\u0435\u0434\u043e\u0432\u0430\u0442\u0435\u043b\u043d\u043e\u0441\u0442\u0442\u0430",
+        "3. \u0421\u0430\u043c\u043e\u0430\u043d\u0430\u043b\u0438\u0437",
+        "   3.1 \u0421\u043f\u0430\u0437\u0432\u0430\u043d\u0435 \u043d\u0430 SOLID \u043f\u0440\u0438\u043d\u0446\u0438\u043f\u0438\u0442\u0435",
+        "   3.2 \u041f\u0440\u043e\u0435\u043a\u0442\u043d\u0438 \u043a\u043e\u043c\u043f\u0440\u043e\u043c\u0438\u0441\u0438",
+        "   3.3 \u041e\u0431\u043b\u0430\u0441\u0442\u0438 \u0437\u0430 \u043f\u043e\u0434\u043e\u0431\u0440\u0435\u043d\u0438\u0435",
     ]
     for entry in toc:
         pdf._body(entry)
@@ -177,24 +180,24 @@ def build_pdf(output_path: str) -> None:
     # 1. API USAGE GUIDE
     # ═══════════════════════════════════════════════════════════════════
     pdf.add_page()
-    pdf._heading(1, "1. API Usage Guide")
+    pdf._heading(1, "1. \u0420\u044a\u043a\u043e\u0432\u043e\u0434\u0441\u0442\u0432\u043e \u0437\u0430 \u0438\u0437\u043f\u043e\u043b\u0437\u0432\u0430\u043d\u0435 \u043d\u0430 API")
     pdf._body(
-        "The API is served at http://localhost:8000 by default. Interactive Swagger UI "
-        "is available at /docs and ReDoc at /redoc. All request and response bodies use JSON. "
-        "Protected endpoints require an Authorization: Bearer <token> header."
+        "API-\u0442\u043e \u0441\u0435 \u0441\u0435\u0440\u0432\u0438\u0440\u0430 \u043d\u0430 http://localhost:8000 \u043f\u043e \u043f\u043e\u0434\u0440\u0430\u0437\u0431\u0438\u0440\u0430\u043d\u0435. \u0418\u043d\u0442\u0435\u0440\u0430\u043a\u0442\u0438\u0432\u0435\u043d Swagger UI "
+        "\u0435 \u043d\u0430\u043b\u0438\u0447\u0435\u043d \u043d\u0430 /docs, \u0430 ReDoc \u043d\u0430 /redoc. \u0412\u0441\u0438\u0447\u043a\u0438 \u0442\u0435\u043b\u0430 \u043d\u0430 \u0437\u0430\u044f\u0432\u043a\u0438 \u0438 \u043e\u0442\u0433\u043e\u0432\u043e\u0440\u0438 \u0441\u0430 \u0432 JSON \u0444\u043e\u0440\u043c\u0430\u0442. "
+        "\u0417\u0430\u0449\u0438\u0442\u0435\u043d\u0438\u0442\u0435 \u043a\u0440\u0430\u0439\u043d\u0438 \u0442\u043e\u0447\u043a\u0438 \u0438\u0437\u0438\u0441\u043a\u0432\u0430\u0442 \u0445\u0435\u0434\u044a\u0440 Authorization: Bearer <token>."
     )
 
-    # ── 1.1 Authentication ───────────────────────────────────────────
-    pdf._heading(2, "1.1 Authentication")
+    # -- 1.1 Authentication
+    pdf._heading(2, "1.1 \u0410\u0443\u0442\u0435\u043d\u0442\u0438\u043a\u0430\u0446\u0438\u044f")
     pdf._body(
-        "The system uses JWT (JSON Web Tokens) for authentication. "
-        "Tokens are obtained via the login endpoint and expire after 60 minutes (configurable). "
-        "Doctors and patients register separately; both receive a token on successful registration."
+        "\u0421\u0438\u0441\u0442\u0435\u043c\u0430\u0442\u0430 \u0438\u0437\u043f\u043e\u043b\u0437\u0432\u0430 JWT (JSON Web Tokens) \u0437\u0430 \u0430\u0443\u0442\u0435\u043d\u0442\u0438\u043a\u0430\u0446\u0438\u044f. "
+        "\u0422\u043e\u043a\u0435\u043d\u0438\u0442\u0435 \u0441\u0435 \u043f\u043e\u043b\u0443\u0447\u0430\u0432\u0430\u0442 \u0447\u0440\u0435\u0437 \u043a\u0440\u0430\u0439\u043d\u0430\u0442\u0430 \u0442\u043e\u0447\u043a\u0430 \u0437\u0430 \u0432\u0445\u043e\u0434 \u0438 \u0438\u0437\u0442\u0438\u0447\u0430\u0442 \u0441\u043b\u0435\u0434 60 \u043c\u0438\u043d\u0443\u0442\u0438 (\u043a\u043e\u043d\u0444\u0438\u0433\u0443\u0440\u0438\u0440\u0443\u0435\u043c\u043e). "
+        "\u041b\u0435\u043a\u0430\u0440\u0438 \u0438 \u043f\u0430\u0446\u0438\u0435\u043d\u0442\u0438 \u0441\u0435 \u0440\u0435\u0433\u0438\u0441\u0442\u0440\u0438\u0440\u0430\u0442 \u043e\u0442\u0434\u0435\u043b\u043d\u043e; \u0438 \u0434\u0432\u0430\u0442\u0430 \u043f\u043e\u043b\u0443\u0447\u0430\u0432\u0430\u0442 \u0442\u043e\u043a\u0435\u043d \u043f\u0440\u0438 \u0443\u0441\u043f\u0435\u0448\u043d\u0430 \u0440\u0435\u0433\u0438\u0441\u0442\u0440\u0430\u0446\u0438\u044f."
     )
 
     pdf._heading(3, "POST /auth/register/doctor")
-    pdf._body("Register a new doctor account with initial working hours.")
-    pdf._bold_body("Request:")
+    pdf._body("\u0420\u0435\u0433\u0438\u0441\u0442\u0440\u0438\u0440\u0430\u043d\u0435 \u043d\u0430 \u043d\u043e\u0432 \u043b\u0435\u043a\u0430\u0440\u0441\u043a\u0438 \u0430\u043a\u0430\u0443\u043d\u0442 \u0441 \u043d\u0430\u0447\u0430\u043b\u043d\u043e \u0440\u0430\u0431\u043e\u0442\u043d\u043e \u0432\u0440\u0435\u043c\u0435.")
+    pdf._bold_body("\u0417\u0430\u044f\u0432\u043a\u0430:")
     pdf._code_block(textwrap.dedent("""\
         POST /auth/register/doctor
         Content-Type: application/json
@@ -213,7 +216,7 @@ def build_pdf(output_path: str) -> None:
             }
           ]
         }"""))
-    pdf._bold_body("Response (201 Created):")
+    pdf._bold_body("\u041e\u0442\u0433\u043e\u0432\u043e\u0440 (201 Created):")
     pdf._code_block(textwrap.dedent("""\
         {
           "access_token": "eyJhbGciOiJIUzI1NiIs...",
@@ -221,8 +224,8 @@ def build_pdf(output_path: str) -> None:
         }"""))
 
     pdf._heading(3, "POST /auth/register/patient")
-    pdf._body("Register a new patient account linked to a personal doctor.")
-    pdf._bold_body("Request:")
+    pdf._body("\u0420\u0435\u0433\u0438\u0441\u0442\u0440\u0438\u0440\u0430\u043d\u0435 \u043d\u0430 \u043d\u043e\u0432 \u043f\u0430\u0446\u0438\u0435\u043d\u0442\u0441\u043a\u0438 \u0430\u043a\u0430\u0443\u043d\u0442, \u0441\u0432\u044a\u0440\u0437\u0430\u043d \u0441 \u043b\u0438\u0447\u0435\u043d \u043b\u0435\u043a\u0430\u0440.")
+    pdf._bold_body("\u0417\u0430\u044f\u0432\u043a\u0430:")
     pdf._code_block(textwrap.dedent("""\
         POST /auth/register/patient
         Content-Type: application/json
@@ -234,7 +237,7 @@ def build_pdf(output_path: str) -> None:
           "phone": "+359888000000",
           "doctor_id": 1
         }"""))
-    pdf._bold_body("Response (201 Created):")
+    pdf._bold_body("\u041e\u0442\u0433\u043e\u0432\u043e\u0440 (201 Created):")
     pdf._code_block(textwrap.dedent("""\
         {
           "access_token": "eyJhbGciOiJIUzI1NiIs...",
@@ -242,8 +245,8 @@ def build_pdf(output_path: str) -> None:
         }"""))
 
     pdf._heading(3, "POST /auth/login")
-    pdf._body("Authenticate with email and password.")
-    pdf._bold_body("Request:")
+    pdf._body("\u0410\u0443\u0442\u0435\u043d\u0442\u0438\u043a\u0430\u0446\u0438\u044f \u0441 \u0438\u043c\u0435\u0439\u043b \u0438 \u043f\u0430\u0440\u043e\u043b\u0430.")
+    pdf._bold_body("\u0417\u0430\u044f\u0432\u043a\u0430:")
     pdf._code_block(textwrap.dedent("""\
         POST /auth/login
         Content-Type: application/json
@@ -252,13 +255,13 @@ def build_pdf(output_path: str) -> None:
           "email": "smith@clinic.com",
           "password": "securepass123"
         }"""))
-    pdf._bold_body("Response (200 OK):")
+    pdf._bold_body("\u041e\u0442\u0433\u043e\u0432\u043e\u0440 (200 OK):")
     pdf._code_block(textwrap.dedent("""\
         {
           "access_token": "eyJhbGciOiJIUzI1NiIs...",
           "token_type": "bearer"
         }"""))
-    pdf._bold_body("Error (401 Unauthorized):")
+    pdf._bold_body("\u0413\u0440\u0435\u0448\u043a\u0430 (401 Unauthorized):")
     pdf._code_block(textwrap.dedent("""\
         {
           "detail": {
@@ -267,13 +270,13 @@ def build_pdf(output_path: str) -> None:
           }
         }"""))
 
-    # ── 1.2 Doctors ──────────────────────────────────────────────────
-    pdf._heading(2, "1.2 Doctors")
+    # -- 1.2 Doctors
+    pdf._heading(2, "1.2 \u041b\u0435\u043a\u0430\u0440\u0438")
 
     pdf._heading(3, "GET /doctors")
-    pdf._body("List all registered doctors (public, paginated).")
-    pdf._bold_body("Query Parameters: skip (default 0), limit (default 20, max 100)")
-    pdf._bold_body("Response (200 OK):")
+    pdf._body("\u0421\u043f\u0438\u0441\u044a\u043a \u043d\u0430 \u0432\u0441\u0438\u0447\u043a\u0438 \u0440\u0435\u0433\u0438\u0441\u0442\u0440\u0438\u0440\u0430\u043d\u0438 \u043b\u0435\u043a\u0430\u0440\u0438 (\u043f\u0443\u0431\u043b\u0438\u0447\u0435\u043d, \u0441 \u043f\u0430\u0433\u0438\u043d\u0430\u0446\u0438\u044f).")
+    pdf._bold_body("\u041f\u0430\u0440\u0430\u043c\u0435\u0442\u0440\u0438: skip (\u043f\u043e \u043f\u043e\u0434\u0440\u0430\u0437\u0431\u0438\u0440\u0430\u043d\u0435 0), limit (\u043f\u043e \u043f\u043e\u0434\u0440\u0430\u0437\u0431\u0438\u0440\u0430\u043d\u0435 20, \u043c\u0430\u043a\u0441. 100)")
+    pdf._bold_body("\u041e\u0442\u0433\u043e\u0432\u043e\u0440 (200 OK):")
     pdf._code_block(textwrap.dedent("""\
         {
           "items": [
@@ -299,9 +302,9 @@ def build_pdf(output_path: str) -> None:
         }"""))
 
     pdf._heading(3, "GET /doctors/{id}")
-    pdf._body("Get a specific doctor's profile and working hours.")
-    pdf._bold_body("Response (200 OK): Same structure as a single item above.")
-    pdf._bold_body("Error (404 Not Found):")
+    pdf._body("\u0418\u0437\u0432\u043b\u0438\u0447\u0430\u043d\u0435 \u043d\u0430 \u043f\u0440\u043e\u0444\u0438\u043b\u0430 \u0438 \u0440\u0430\u0431\u043e\u0442\u043d\u043e\u0442\u043e \u0432\u0440\u0435\u043c\u0435 \u043d\u0430 \u043a\u043e\u043d\u043a\u0440\u0435\u0442\u0435\u043d \u043b\u0435\u043a\u0430\u0440.")
+    pdf._bold_body("\u041e\u0442\u0433\u043e\u0432\u043e\u0440 (200 OK): \u0421\u044a\u0449\u0430\u0442\u0430 \u0441\u0442\u0440\u0443\u043a\u0442\u0443\u0440\u0430 \u043a\u0430\u0442\u043e \u0435\u0434\u0438\u043d \u0435\u043b\u0435\u043c\u0435\u043d\u0442 \u043e\u0442 \u0433\u043e\u0440\u043d\u0438\u044f \u0441\u043f\u0438\u0441\u044a\u043a.")
+    pdf._bold_body("\u0413\u0440\u0435\u0448\u043a\u0430 (404 Not Found):")
     pdf._code_block(textwrap.dedent("""\
         {
           "detail": {
@@ -310,13 +313,13 @@ def build_pdf(output_path: str) -> None:
           }
         }"""))
 
-    # ── 1.3 Patients ─────────────────────────────────────────────────
-    pdf._heading(2, "1.3 Patients")
+    # -- 1.3 Patients
+    pdf._heading(2, "1.3 \u041f\u0430\u0446\u0438\u0435\u043d\u0442\u0438")
 
     pdf._heading(3, "GET /patients/me")
-    pdf._body("Get the authenticated patient's own profile. Requires patient role.")
-    pdf._bold_body("Headers: Authorization: Bearer <token>")
-    pdf._bold_body("Response (200 OK):")
+    pdf._body("\u0418\u0437\u0432\u043b\u0438\u0447\u0430\u043d\u0435 \u043d\u0430 \u043f\u0440\u043e\u0444\u0438\u043b\u0430 \u043d\u0430 \u0430\u0443\u0442\u0435\u043d\u0442\u0438\u043a\u0438\u0440\u0430\u043d\u0438\u044f \u043f\u0430\u0446\u0438\u0435\u043d\u0442. \u0418\u0437\u0438\u0441\u043a\u0432\u0430 \u0440\u043e\u043b\u044f \u043d\u0430 \u043f\u0430\u0446\u0438\u0435\u043d\u0442.")
+    pdf._bold_body("\u0425\u0435\u0434\u044a\u0440\u0438: Authorization: Bearer <token>")
+    pdf._bold_body("\u041e\u0442\u0433\u043e\u0432\u043e\u0440 (200 OK):")
     pdf._code_block(textwrap.dedent("""\
         {
           "id": 2,
@@ -326,20 +329,20 @@ def build_pdf(output_path: str) -> None:
           "doctor_id": 1
         }"""))
 
-    # ── 1.4 Working Hours & Schedules ────────────────────────────────
+    # -- 1.4 Working Hours & Schedules
     pdf.add_page()
-    pdf._heading(2, "1.4 Working Hours & Schedules")
+    pdf._heading(2, "1.4 \u0420\u0430\u0431\u043e\u0442\u043d\u043e \u0432\u0440\u0435\u043c\u0435 \u0438 \u0433\u0440\u0430\u0444\u0438\u0446\u0438")
     pdf._body(
-        "Doctors manage three layers of schedule data. "
-        "When resolving the effective schedule for a given date, the system checks in order: "
-        "(1) active temporary override covering the date, "
-        "(2) latest permanent change with effective_date <= the date, "
-        "(3) base working hours. The first match wins."
+        "\u041b\u0435\u043a\u0430\u0440\u0438\u0442\u0435 \u0443\u043f\u0440\u0430\u0432\u043b\u044f\u0432\u0430\u0442 \u0442\u0440\u0438 \u043d\u0438\u0432\u0430 \u043d\u0430 \u0433\u0440\u0430\u0444\u0438\u0447\u043d\u0438 \u0434\u0430\u043d\u043d\u0438. "
+        "\u041f\u0440\u0438 \u043e\u043f\u0440\u0435\u0434\u0435\u043b\u044f\u043d\u0435 \u043d\u0430 \u0435\u0444\u0435\u043a\u0442\u0438\u0432\u043d\u0438\u044f \u0433\u0440\u0430\u0444\u0438\u043a \u0437\u0430 \u0434\u0430\u0434\u0435\u043d\u0430 \u0434\u0430\u0442\u0430 \u0441\u0438\u0441\u0442\u0435\u043c\u0430\u0442\u0430 \u043f\u0440\u043e\u0432\u0435\u0440\u044f\u0432\u0430 \u0432 \u0440\u0435\u0434: "
+        "(1) \u0430\u043a\u0442\u0438\u0432\u043d\u043e \u0432\u0440\u0435\u043c\u0435\u043d\u043d\u043e \u043f\u0440\u0435\u0434\u0435\u0444\u0438\u043d\u0438\u0440\u0430\u043d\u0435, \u043f\u043e\u043a\u0440\u0438\u0432\u0430\u0449\u043e \u0434\u0430\u0442\u0430\u0442\u0430; "
+        "(2) \u043f\u043e\u0441\u043b\u0435\u0434\u043d\u0430 \u043f\u043e\u0441\u0442\u043e\u044f\u043d\u043d\u0430 \u043f\u0440\u043e\u043c\u044f\u043d\u0430 \u0441 effective_date <= \u0434\u0430\u0442\u0430\u0442\u0430; "
+        "(3) \u0431\u0430\u0437\u043e\u0432\u043e \u0440\u0430\u0431\u043e\u0442\u043d\u043e \u0432\u0440\u0435\u043c\u0435. \u041f\u044a\u0440\u0432\u043e\u0442\u043e \u0441\u044a\u0432\u043f\u0430\u0434\u0435\u043d\u0438\u0435 \u043f\u0435\u0447\u0435\u043b\u0438."
     )
 
     pdf._heading(3, "PUT /doctors/me/schedule")
-    pdf._body("Replace the doctor's base working hours (doctor only).")
-    pdf._bold_body("Request:")
+    pdf._body("\u0417\u0430\u043c\u044f\u043d\u0430 \u043d\u0430 \u0431\u0430\u0437\u043e\u0432\u043e\u0442\u043e \u0440\u0430\u0431\u043e\u0442\u043d\u043e \u0432\u0440\u0435\u043c\u0435 \u043d\u0430 \u043b\u0435\u043a\u0430\u0440\u044f (\u0441\u0430\u043c\u043e \u0437\u0430 \u043b\u0435\u043a\u0430\u0440\u0438).")
+    pdf._bold_body("\u0417\u0430\u044f\u0432\u043a\u0430:")
     pdf._code_block(textwrap.dedent("""\
         PUT /doctors/me/schedule
         Authorization: Bearer <doctor_token>
@@ -355,20 +358,20 @@ def build_pdf(output_path: str) -> None:
           ]
         }"""))
     pdf._body(
-        "Returns 200 with the updated WeeklyScheduleResponse. "
-        "Returns 422 SCHEDULE_CONFLICTS_APPOINTMENT if existing appointments "
-        "would fall outside the new hours."
+        "\u0412\u0440\u044a\u0449\u0430 200 \u0441 \u0430\u043a\u0442\u0443\u0430\u043b\u0438\u0437\u0438\u0440\u0430\u043d WeeklyScheduleResponse. "
+        "\u0412\u0440\u044a\u0449\u0430 422 SCHEDULE_CONFLICTS_APPOINTMENT \u0430\u043a\u043e \u0441\u044a\u0449\u0435\u0441\u0442\u0432\u0443\u0432\u0430\u0449\u0438 \u0437\u0430\u043f\u0438\u0441\u0432\u0430\u043d\u0438\u044f "
+        "\u0431\u0438\u0445\u0430 \u043f\u043e\u043f\u0430\u0434\u043d\u0430\u043b\u0438 \u0438\u0437\u0432\u044a\u043d \u043d\u043e\u0432\u0438\u0442\u0435 \u0447\u0430\u0441\u043e\u0432\u0435."
     )
 
     pdf._heading(3, "GET /doctors/{id}/schedule?date=YYYY-MM-DD")
     pdf._body(
-        "Get the effective schedule for a doctor on a specific date. "
-        "Defaults to today if date is omitted. Returns a list of TimeSlotResponse objects."
+        "\u0418\u0437\u0432\u043b\u0438\u0447\u0430\u043d\u0435 \u043d\u0430 \u0435\u0444\u0435\u043a\u0442\u0438\u0432\u043d\u0438\u044f \u0433\u0440\u0430\u0444\u0438\u043a \u043d\u0430 \u043b\u0435\u043a\u0430\u0440 \u0437\u0430 \u043a\u043e\u043d\u043a\u0440\u0435\u0442\u043d\u0430 \u0434\u0430\u0442\u0430. "
+        "\u041f\u043e \u043f\u043e\u0434\u0440\u0430\u0437\u0431\u0438\u0440\u0430\u043d\u0435 \u0435 \u0434\u043d\u0435\u0448\u043d\u0430\u0442\u0430 \u0434\u0430\u0442\u0430. \u0412\u0440\u044a\u0449\u0430 \u0441\u043f\u0438\u0441\u044a\u043a \u043e\u0442 TimeSlotResponse \u043e\u0431\u0435\u043a\u0442\u0438."
     )
 
     pdf._heading(3, "POST /doctors/me/schedule/temporary")
-    pdf._body("Create a temporary schedule override (max 1 per doctor).")
-    pdf._bold_body("Request:")
+    pdf._body("\u0421\u044a\u0437\u0434\u0430\u0432\u0430\u043d\u0435 \u043d\u0430 \u0432\u0440\u0435\u043c\u0435\u043d\u043d\u043e \u043f\u0440\u0435\u0434\u0435\u0444\u0438\u043d\u0438\u0440\u0430\u043d\u0435 \u043d\u0430 \u0433\u0440\u0430\u0444\u0438\u043a\u0430 (\u043c\u0430\u043a\u0441. 1 \u043d\u0430 \u043b\u0435\u043a\u0430\u0440).")
+    pdf._bold_body("\u0417\u0430\u044f\u0432\u043a\u0430:")
     pdf._code_block(textwrap.dedent("""\
         {
           "start_datetime": "2025-06-01T00:00:00Z",
@@ -379,17 +382,17 @@ def build_pdf(output_path: str) -> None:
           ]
         }"""))
     pdf._body(
-        "Returns 201 with TemporaryOverrideResponse. "
-        "Returns 409 OVERRIDE_EXISTS if the doctor already has one. "
-        "Returns 422 SCHEDULE_CONFLICTS_APPOINTMENT if existing appointments conflict."
+        "\u0412\u0440\u044a\u0449\u0430 201 \u0441 TemporaryOverrideResponse. "
+        "\u0412\u0440\u044a\u0449\u0430 409 OVERRIDE_EXISTS \u0430\u043a\u043e \u043b\u0435\u043a\u0430\u0440\u044f\u0442 \u0432\u0435\u0447\u0435 \u0438\u043c\u0430 \u0435\u0434\u043d\u043e. "
+        "\u0412\u0440\u044a\u0449\u0430 422 SCHEDULE_CONFLICTS_APPOINTMENT \u0430\u043a\u043e \u0441\u044a\u0449\u0435\u0441\u0442\u0432\u0443\u0432\u0430\u0449\u0438 \u0437\u0430\u043f\u0438\u0441\u0432\u0430\u043d\u0438\u044f \u043a\u043e\u043d\u0444\u043b\u0438\u043a\u0442\u0443\u0432\u0430\u0442."
     )
 
     pdf._heading(3, "DELETE /doctors/me/schedule/temporary")
-    pdf._body("Remove the active temporary override. Returns 204 No Content.")
+    pdf._body("\u041f\u0440\u0435\u043c\u0430\u0445\u0432\u0430\u043d\u0435 \u043d\u0430 \u0430\u043a\u0442\u0438\u0432\u043d\u043e\u0442\u043e \u0432\u0440\u0435\u043c\u0435\u043d\u043d\u043e \u043f\u0440\u0435\u0434\u0435\u0444\u0438\u043d\u0438\u0440\u0430\u043d\u0435. \u0412\u0440\u044a\u0449\u0430 204 No Content.")
 
     pdf._heading(3, "POST /doctors/me/schedule/permanent")
-    pdf._body("Schedule a permanent working-hours replacement (effective_date >= today + 7 days).")
-    pdf._bold_body("Request:")
+    pdf._body("\u041f\u043b\u0430\u043d\u0438\u0440\u0430\u043d\u0435 \u043d\u0430 \u043f\u043e\u0441\u0442\u043e\u044f\u043d\u043d\u0430 \u0441\u043c\u044f\u043d\u0430 \u043d\u0430 \u0440\u0430\u0431\u043e\u0442\u043d\u043e\u0442\u043e \u0432\u0440\u0435\u043c\u0435 (effective_date >= \u0434\u043d\u0435\u0441 + 7 \u0434\u043d\u0438).")
+    pdf._bold_body("\u0417\u0430\u044f\u0432\u043a\u0430:")
     pdf._code_block(textwrap.dedent("""\
         {
           "effective_date": "2025-07-01",
@@ -399,25 +402,25 @@ def build_pdf(output_path: str) -> None:
           ]
         }"""))
     pdf._body(
-        "Returns 201 with PermanentChangeResponse. "
-        "Returns 422 EFFECTIVE_DATE_TOO_SOON if the date is less than 7 days away. "
-        "Returns 422 SCHEDULE_CONFLICTS_APPOINTMENT if existing appointments conflict. "
-        "Pending permanent changes are automatically promoted to base working_hours "
-        "on application startup and before each schedule resolution."
+        "\u0412\u0440\u044a\u0449\u0430 201 \u0441 PermanentChangeResponse. "
+        "\u0412\u0440\u044a\u0449\u0430 422 EFFECTIVE_DATE_TOO_SOON \u0430\u043a\u043e \u0434\u0430\u0442\u0430\u0442\u0430 \u0435 \u043f\u043e-\u043c\u0430\u043b\u043a\u043e \u043e\u0442 7 \u0434\u043d\u0438 \u043d\u0430\u043f\u0440\u0435\u0434. "
+        "\u0412\u0440\u044a\u0449\u0430 422 SCHEDULE_CONFLICTS_APPOINTMENT \u0430\u043a\u043e \u0441\u044a\u0449\u0435\u0441\u0442\u0432\u0443\u0432\u0430\u0449\u0438 \u0437\u0430\u043f\u0438\u0441\u0432\u0430\u043d\u0438\u044f \u043a\u043e\u043d\u0444\u043b\u0438\u043a\u0442\u0443\u0432\u0430\u0442. "
+        "\u0427\u0430\u043a\u0430\u0449\u0438\u0442\u0435 \u043f\u043e\u0441\u0442\u043e\u044f\u043d\u043d\u0438 \u043f\u0440\u043e\u043c\u0435\u043d\u0438 \u0441\u0435 \u043f\u0440\u0438\u043b\u0430\u0433\u0430\u0442 \u0430\u0432\u0442\u043e\u043c\u0430\u0442\u0438\u0447\u043d\u043e \u043a\u044a\u043c \u0431\u0430\u0437\u043e\u0432\u043e\u0442\u043e \u0440\u0430\u0431\u043e\u0442\u043d\u043e \u0432\u0440\u0435\u043c\u0435 "
+        "\u043f\u0440\u0438 \u0441\u0442\u0430\u0440\u0442\u0438\u0440\u0430\u043d\u0435 \u043d\u0430 \u043f\u0440\u0438\u043b\u043e\u0436\u0435\u043d\u0438\u0435\u0442\u043e \u0438 \u043f\u0440\u0435\u0434\u0438 \u0432\u0441\u044f\u043a\u043e \u0440\u0430\u0437\u0440\u0435\u0448\u0430\u0432\u0430\u043d\u0435 \u043d\u0430 \u0433\u0440\u0430\u0444\u0438\u043a."
     )
 
-    # ── 1.5 Appointments ─────────────────────────────────────────────
+    # -- 1.5 Appointments
     pdf.add_page()
-    pdf._heading(2, "1.5 Appointments")
+    pdf._heading(2, "1.5 \u0417\u0430\u043f\u0438\u0441\u0432\u0430\u043d\u0438\u044f (\u0447\u0430\u0441\u043e\u0432\u0435)")
 
     pdf._heading(3, "POST /appointments")
-    pdf._body("Create an appointment (patient only). Business rules enforced:")
-    pdf._bullet("Doctor must be the patient's personal doctor (403 NOT_PERSONAL_DOCTOR)")
-    pdf._bullet("Start must be at least 24 hours in the future (422 TOO_SOON)")
-    pdf._bullet("Start and end must be on the same calendar day (422 INVALID_TIME_RANGE)")
-    pdf._bullet("Interval must fit within a non-break working slot (422 OUTSIDE_WORKING_HOURS)")
-    pdf._bullet("No overlap with other scheduled appointments (409 APPOINTMENT_OVERLAP)")
-    pdf._bold_body("Request:")
+    pdf._body("\u0421\u044a\u0437\u0434\u0430\u0432\u0430\u043d\u0435 \u043d\u0430 \u0437\u0430\u043f\u0438\u0441\u0432\u0430\u043d\u0435 (\u0441\u0430\u043c\u043e \u0437\u0430 \u043f\u0430\u0446\u0438\u0435\u043d\u0442\u0438). \u041f\u0440\u0438\u043b\u0430\u0433\u0430\u043d\u0438 \u0431\u0438\u0437\u043d\u0435\u0441 \u043f\u0440\u0430\u0432\u0438\u043b\u0430:")
+    pdf._bullet("\u041b\u0435\u043a\u0430\u0440\u044f\u0442 \u0442\u0440\u044f\u0431\u0432\u0430 \u0434\u0430 \u0435 \u043b\u0438\u0447\u043d\u0438\u044f\u0442 \u043b\u0435\u043a\u0430\u0440 \u043d\u0430 \u043f\u0430\u0446\u0438\u0435\u043d\u0442\u0430 (403 NOT_PERSONAL_DOCTOR)")
+    pdf._bullet("\u041d\u0430\u0447\u0430\u043b\u043e\u0442\u043e \u0442\u0440\u044f\u0431\u0432\u0430 \u0434\u0430 \u0435 \u043f\u043e\u043d\u0435 24 \u0447\u0430\u0441\u0430 \u0432 \u0431\u044a\u0434\u0435\u0449\u0435\u0442\u043e (422 TOO_SOON)")
+    pdf._bullet("\u041d\u0430\u0447\u0430\u043b\u043e \u0438 \u043a\u0440\u0430\u0439 \u0442\u0440\u044f\u0431\u0432\u0430 \u0434\u0430 \u0441\u0430 \u0432 \u0435\u0434\u0438\u043d \u0438 \u0441\u044a\u0449 \u043a\u0430\u043b\u0435\u043d\u0434\u0430\u0440\u0435\u043d \u0434\u0435\u043d (422 INVALID_TIME_RANGE)")
+    pdf._bullet("\u0418\u043d\u0442\u0435\u0440\u0432\u0430\u043b\u044a\u0442 \u0442\u0440\u044f\u0431\u0432\u0430 \u0434\u0430 \u043f\u043e\u043f\u0430\u0434\u0430 \u0432 \u0440\u0430\u0431\u043e\u0442\u0435\u043d \u0441\u043b\u043e\u0442 \u0431\u0435\u0437 \u043f\u043e\u0447\u0438\u0432\u043a\u0430 (422 OUTSIDE_WORKING_HOURS)")
+    pdf._bullet("\u0411\u0435\u0437 \u043f\u0440\u0435\u043f\u043e\u043a\u0440\u0438\u0432\u0430\u043d\u0435 \u0441 \u0434\u0440\u0443\u0433\u0438 \u043f\u043b\u0430\u043d\u0438\u0440\u0430\u043d\u0438 \u0437\u0430\u043f\u0438\u0441\u0432\u0430\u043d\u0438\u044f (409 APPOINTMENT_OVERLAP)")
+    pdf._bold_body("\u0417\u0430\u044f\u0432\u043a\u0430:")
     pdf._code_block(textwrap.dedent("""\
         POST /appointments
         Authorization: Bearer <patient_token>
@@ -427,7 +430,7 @@ def build_pdf(output_path: str) -> None:
           "start_datetime": "2025-06-15T10:00:00Z",
           "end_datetime": "2025-06-15T11:00:00Z"
         }"""))
-    pdf._bold_body("Response (201 Created):")
+    pdf._bold_body("\u041e\u0442\u0433\u043e\u0432\u043e\u0440 (201 Created):")
     pdf._code_block(textwrap.dedent("""\
         {
           "id": 1,
@@ -440,22 +443,22 @@ def build_pdf(output_path: str) -> None:
         }"""))
 
     pdf._heading(3, "DELETE /appointments/{id}")
-    pdf._body("Cancel an appointment (patient or doctor). Rules:")
-    pdf._bullet("User must be the appointment's doctor or patient (403 NOT_APPOINTMENT_OWNER)")
-    pdf._bullet("Cancellation at least 12 hours before start (422 CANCELLATION_TOO_LATE)")
-    pdf._bullet("Cannot cancel an already-cancelled appointment (409 ALREADY_CANCELLED)")
-    pdf._body("Returns 204 No Content on success.")
+    pdf._body("\u041e\u0442\u043c\u044f\u043d\u0430 \u043d\u0430 \u0437\u0430\u043f\u0438\u0441\u0432\u0430\u043d\u0435 (\u043f\u0430\u0446\u0438\u0435\u043d\u0442 \u0438\u043b\u0438 \u043b\u0435\u043a\u0430\u0440). \u041f\u0440\u0430\u0432\u0438\u043b\u0430:")
+    pdf._bullet("\u041f\u043e\u0442\u0440\u0435\u0431\u0438\u0442\u0435\u043b\u044f\u0442 \u0442\u0440\u044f\u0431\u0432\u0430 \u0434\u0430 \u0435 \u043b\u0435\u043a\u0430\u0440\u044f\u0442 \u0438\u043b\u0438 \u043f\u0430\u0446\u0438\u0435\u043d\u0442\u044a\u0442 (403 NOT_APPOINTMENT_OWNER)")
+    pdf._bullet("\u041e\u0442\u043c\u044f\u043d\u0430 \u043f\u043e\u043d\u0435 12 \u0447\u0430\u0441\u0430 \u043f\u0440\u0435\u0434\u0438 \u043d\u0430\u0447\u0430\u043b\u043e\u0442\u043e (422 CANCELLATION_TOO_LATE)")
+    pdf._bullet("\u041d\u0435 \u043c\u043e\u0436\u0435 \u0434\u0430 \u0441\u0435 \u043e\u0442\u043c\u0435\u043d\u0438 \u0432\u0435\u0447\u0435 \u043e\u0442\u043c\u0435\u043d\u0435\u043d\u043e \u0437\u0430\u043f\u0438\u0441\u0432\u0430\u043d\u0435 (409 ALREADY_CANCELLED)")
+    pdf._body("\u0412\u0440\u044a\u0449\u0430 204 No Content \u043f\u0440\u0438 \u0443\u0441\u043f\u0435\u0445.")
 
     pdf._heading(3, "GET /appointments")
     pdf._body(
-        "List the authenticated user's own appointments. Doctors see appointments "
-        "where they are the doctor; patients see theirs."
+        "\u0421\u043f\u0438\u0441\u044a\u043a \u043d\u0430 \u0441\u043e\u0431\u0441\u0442\u0432\u0435\u043d\u0438\u0442\u0435 \u0437\u0430\u043f\u0438\u0441\u0432\u0430\u043d\u0438\u044f \u043d\u0430 \u0430\u0443\u0442\u0435\u043d\u0442\u0438\u043a\u0438\u0440\u0430\u043d\u0438\u044f \u043f\u043e\u0442\u0440\u0435\u0431\u0438\u0442\u0435\u043b. \u041b\u0435\u043a\u0430\u0440\u0438\u0442\u0435 \u0432\u0438\u0436\u0434\u0430\u0442 \u0437\u0430\u043f\u0438\u0441\u0432\u0430\u043d\u0438\u044f\u0442\u0430, "
+        "\u043a\u044a\u0434\u0435\u0442\u043e \u0441\u0430 \u043b\u0435\u043a\u0430\u0440; \u043f\u0430\u0446\u0438\u0435\u043d\u0442\u0438\u0442\u0435 \u0432\u0438\u0436\u0434\u0430\u0442 \u0441\u0432\u043e\u0438\u0442\u0435."
     )
-    pdf._bold_body("Query Parameters:")
-    pdf._bullet("skip, limit - pagination (defaults: 0, 20)")
-    pdf._bullet("date_from, date_to - filter by date range (ISO format)")
-    pdf._bullet("status - filter by 'scheduled' or 'cancelled'")
-    pdf._bold_body("Response (200 OK):")
+    pdf._bold_body("\u041f\u0430\u0440\u0430\u043c\u0435\u0442\u0440\u0438:")
+    pdf._bullet("skip, limit \u2014 \u043f\u0430\u0433\u0438\u043d\u0430\u0446\u0438\u044f (\u043f\u043e \u043f\u043e\u0434\u0440\u0430\u0437\u0431\u0438\u0440\u0430\u043d\u0435: 0, 20)")
+    pdf._bullet("date_from, date_to \u2014 \u0444\u0438\u043b\u0442\u044a\u0440 \u043f\u043e \u043f\u0435\u0440\u0438\u043e\u0434 (ISO \u0444\u043e\u0440\u043c\u0430\u0442)")
+    pdf._bullet("status \u2014 \u0444\u0438\u043b\u0442\u044a\u0440 \u043f\u043e 'scheduled' \u0438\u043b\u0438 'cancelled'")
+    pdf._bold_body("\u041e\u0442\u0433\u043e\u0432\u043e\u0440 (200 OK):")
     pdf._code_block(textwrap.dedent("""\
         {
           "items": [ ... ],
@@ -464,10 +467,10 @@ def build_pdf(output_path: str) -> None:
           "limit": 20
         }"""))
 
-    # ── 1.6 Error Codes Reference ────────────────────────────────────
+    # -- 1.6 Error Codes Reference
     pdf.add_page()
-    pdf._heading(2, "1.6 Error Codes Reference")
-    pdf._body("All application errors return a consistent JSON structure:")
+    pdf._heading(2, "1.6 \u0421\u043f\u0440\u0430\u0432\u043e\u0447\u043d\u0438\u043a \u043d\u0430 \u043a\u043e\u0434\u043e\u0432\u0435 \u0437\u0430 \u0433\u0440\u0435\u0448\u043a\u0438")
+    pdf._body("\u0412\u0441\u0438\u0447\u043a\u0438 \u0433\u0440\u0435\u0448\u043a\u0438 \u0432\u0440\u044a\u0449\u0430\u0442 \u0435\u0434\u0438\u043d\u043d\u0430 JSON \u0441\u0442\u0440\u0443\u043a\u0442\u0443\u0440\u0430:")
     pdf._code_block(textwrap.dedent("""\
         {
           "detail": {
@@ -477,46 +480,46 @@ def build_pdf(output_path: str) -> None:
         }"""))
 
     pdf._table(
-        ["HTTP", "Code", "Description"],
+        ["HTTP", "\u041a\u043e\u0434", "\u041e\u043f\u0438\u0441\u0430\u043d\u0438\u0435"],
         [
-            ["401", "INVALID_CREDENTIALS", "Wrong email or password"],
-            ["401", "INVALID_TOKEN", "Missing, expired, or malformed JWT"],
-            ["403", "NOT_PERSONAL_DOCTOR", "Doctor is not the patient's assigned doctor"],
-            ["403", "NOT_APPOINTMENT_OWNER", "User is not party to the appointment"],
-            ["403", "DOCTOR_REQUIRED", "Endpoint requires doctor role"],
-            ["403", "PATIENT_REQUIRED", "Endpoint requires patient role"],
-            ["404", "DOCTOR_NOT_FOUND", "No doctor with the given ID"],
-            ["404", "PATIENT_NOT_FOUND", "No patient profile for the user"],
-            ["404", "APPOINTMENT_NOT_FOUND", "No appointment with the given ID"],
-            ["404", "OVERRIDE_NOT_FOUND", "No active temporary override"],
-            ["409", "EMAIL_EXISTS", "Email already registered"],
-            ["409", "APPOINTMENT_OVERLAP", "Time slot overlaps existing appointment"],
-            ["409", "OVERRIDE_EXISTS", "Doctor already has a temp override"],
-            ["409", "ALREADY_CANCELLED", "Appointment was already cancelled"],
-            ["422", "TOO_SOON", "Appointment less than 24h in the future"],
-            ["422", "CANCELLATION_TOO_LATE", "Less than 12h before appointment"],
-            ["422", "OUTSIDE_WORKING_HOURS", "Appointment outside effective hours"],
-            ["422", "INVALID_TIME_RANGE", "End before start, or cross-day"],
-            ["422", "EFFECTIVE_DATE_TOO_SOON", "Permanent change < 7 days ahead"],
-            ["422", "SCHEDULE_CONFLICTS_APPOINTMENT", "Schedule change conflicts with bookings"],
-            ["422", "INVALID_OVERRIDE_WINDOW", "Override end before start"],
+            ["401", "INVALID_CREDENTIALS", "\u0413\u0440\u0435\u0448\u0435\u043d \u0438\u043c\u0435\u0439\u043b \u0438\u043b\u0438 \u043f\u0430\u0440\u043e\u043b\u0430"],
+            ["401", "INVALID_TOKEN", "\u041b\u0438\u043f\u0441\u0432\u0430\u0449, \u0438\u0437\u0442\u0435\u043a\u044a\u043b \u0438\u043b\u0438 \u043d\u0435\u0432\u0430\u043b\u0438\u0434\u0435\u043d JWT"],
+            ["403", "NOT_PERSONAL_DOCTOR", "\u041b\u0435\u043a\u0430\u0440\u044f\u0442 \u043d\u0435 \u0435 \u043b\u0438\u0447\u0435\u043d \u043b\u0435\u043a\u0430\u0440 \u043d\u0430 \u043f\u0430\u0446\u0438\u0435\u043d\u0442\u0430"],
+            ["403", "NOT_APPOINTMENT_OWNER", "\u041f\u043e\u0442\u0440\u0435\u0431\u0438\u0442\u0435\u043b\u044f\u0442 \u043d\u0435 \u0435 \u0441\u0442\u0440\u0430\u043d\u0430 \u043f\u043e \u0437\u0430\u043f\u0438\u0441\u0432\u0430\u043d\u0435\u0442\u043e"],
+            ["403", "DOCTOR_REQUIRED", "\u041a\u0440\u0430\u0439\u043d\u0430\u0442\u0430 \u0442\u043e\u0447\u043a\u0430 \u0438\u0437\u0438\u0441\u043a\u0432\u0430 \u0440\u043e\u043b\u044f \u043d\u0430 \u043b\u0435\u043a\u0430\u0440"],
+            ["403", "PATIENT_REQUIRED", "\u041a\u0440\u0430\u0439\u043d\u0430\u0442\u0430 \u0442\u043e\u0447\u043a\u0430 \u0438\u0437\u0438\u0441\u043a\u0432\u0430 \u0440\u043e\u043b\u044f \u043d\u0430 \u043f\u0430\u0446\u0438\u0435\u043d\u0442"],
+            ["404", "DOCTOR_NOT_FOUND", "\u041d\u044f\u043c\u0430 \u043b\u0435\u043a\u0430\u0440 \u0441 \u0442\u043e\u0432\u0430 ID"],
+            ["404", "PATIENT_NOT_FOUND", "\u041d\u044f\u043c\u0430 \u043f\u0430\u0446\u0438\u0435\u043d\u0442\u0441\u043a\u0438 \u043f\u0440\u043e\u0444\u0438\u043b"],
+            ["404", "APPOINTMENT_NOT_FOUND", "\u041d\u044f\u043c\u0430 \u0437\u0430\u043f\u0438\u0441\u0432\u0430\u043d\u0435 \u0441 \u0442\u043e\u0432\u0430 ID"],
+            ["404", "OVERRIDE_NOT_FOUND", "\u041d\u044f\u043c\u0430 \u0430\u043a\u0442\u0438\u0432\u043d\u043e \u0432\u0440\u0435\u043c\u0435\u043d\u043d\u043e \u043f\u0440\u0435\u0434\u0435\u0444\u0438\u043d\u0438\u0440\u0430\u043d\u0435"],
+            ["409", "EMAIL_EXISTS", "\u0418\u043c\u0435\u0439\u043b\u044a\u0442 \u0432\u0435\u0447\u0435 \u0435 \u0440\u0435\u0433\u0438\u0441\u0442\u0440\u0438\u0440\u0430\u043d"],
+            ["409", "APPOINTMENT_OVERLAP", "\u0417\u0430\u043f\u0438\u0441\u0432\u0430\u043d\u0435\u0442\u043e \u0441\u0435 \u043f\u0440\u0435\u043f\u043e\u043a\u0440\u0438\u0432\u0430"],
+            ["409", "OVERRIDE_EXISTS", "\u041b\u0435\u043a\u0430\u0440\u044f\u0442 \u0432\u0435\u0447\u0435 \u0438\u043c\u0430 \u043f\u0440\u0435\u0434\u0435\u0444\u0438\u043d\u0438\u0440\u0430\u043d\u0435"],
+            ["409", "ALREADY_CANCELLED", "\u0417\u0430\u043f\u0438\u0441\u0432\u0430\u043d\u0435\u0442\u043e \u0432\u0435\u0447\u0435 \u0435 \u043e\u0442\u043c\u0435\u043d\u0435\u043d\u043e"],
+            ["422", "TOO_SOON", "\u041f\u043e-\u043c\u0430\u043b\u043a\u043e \u043e\u0442 24\u0447 \u0434\u043e \u0437\u0430\u043f\u0438\u0441\u0432\u0430\u043d\u0435\u0442\u043e"],
+            ["422", "CANCELLATION_TOO_LATE", "\u041f\u043e-\u043c\u0430\u043b\u043a\u043e \u043e\u0442 12\u0447 \u0434\u043e \u0437\u0430\u043f\u0438\u0441\u0432\u0430\u043d\u0435\u0442\u043e"],
+            ["422", "OUTSIDE_WORKING_HOURS", "\u0417\u0430\u043f\u0438\u0441\u0432\u0430\u043d\u0435\u0442\u043e \u0435 \u0438\u0437\u0432\u044a\u043d \u0440\u0430\u0431. \u0432\u0440\u0435\u043c\u0435"],
+            ["422", "INVALID_TIME_RANGE", "\u041a\u0440\u0430\u044f\u0442 \u0435 \u043f\u0440\u0435\u0434\u0438 \u043d\u0430\u0447\u0430\u043b\u043e\u0442\u043e \u0438\u043b\u0438 \u043f\u0440\u0435\u043c\u0438\u043d\u0430\u0432\u0430 \u0434\u0435\u043d"],
+            ["422", "EFFECTIVE_DATE_TOO_SOON", "\u041f\u043e\u0441\u0442. \u043f\u0440\u043e\u043c\u044f\u043d\u0430 < 7 \u0434\u043d\u0438 \u043d\u0430\u043f\u0440\u0435\u0434"],
+            ["422", "SCHEDULE_CONFLICTS_APPOINTMENT", "\u0413\u0440\u0430\u0444\u0438\u043a\u044a\u0442 \u043a\u043e\u043d\u0444\u043b\u0438\u043a\u0442\u0443\u0432\u0430 \u0441\u044a\u0441 \u0437\u0430\u043f\u0438\u0441\u0432\u0430\u043d\u0438\u044f"],
+            ["422", "INVALID_OVERRIDE_WINDOW", "\u041a\u0440\u0430\u044f\u0442 \u043d\u0430 \u043f\u0440\u0435\u0434\u0435\u0444\u0438\u043d\u0438\u0440\u0430\u043d\u0435\u0442\u043e \u0435 \u043f\u0440\u0435\u0434\u0438 \u043d\u0430\u0447\u0430\u043b\u043e\u0442\u043e"],
         ],
         col_widths=[8, 40, 52],
     )
 
-    pdf._heading(2, "HTTP Status Code Summary")
+    pdf._heading(2, "\u041e\u0431\u043e\u0431\u0449\u0435\u043d\u0438\u0435 \u043d\u0430 HTTP \u0441\u0442\u0430\u0442\u0443\u0441 \u043a\u043e\u0434\u043e\u0432\u0435")
     pdf._table(
-        ["Code", "Meaning", "Used For"],
+        ["\u041a\u043e\u0434", "\u0417\u043d\u0430\u0447\u0435\u043d\u0438\u0435", "\u0418\u0437\u043f\u043e\u043b\u0437\u0432\u0430 \u0441\u0435 \u0437\u0430"],
         [
-            ["200", "OK", "Successful GET, PUT"],
-            ["201", "Created", "Successful POST that creates a resource"],
-            ["204", "No Content", "Successful DELETE"],
-            ["400", "Bad Request", "Malformed JSON / missing fields (Pydantic)"],
-            ["401", "Unauthorized", "Missing or invalid JWT"],
-            ["403", "Forbidden", "Wrong role or not the resource owner"],
-            ["404", "Not Found", "Resource does not exist"],
-            ["409", "Conflict", "Duplicate / overlap / already exists"],
-            ["422", "Unprocessable Entity", "Business rule violation"],
+            ["200", "OK", "\u0423\u0441\u043f\u0435\u0448\u043d\u043e GET, PUT"],
+            ["201", "Created", "\u0423\u0441\u043f\u0435\u0448\u043d\u043e POST, \u0441\u044a\u0437\u0434\u0430\u0432\u0430\u0449\u043e \u0440\u0435\u0441\u0443\u0440\u0441"],
+            ["204", "No Content", "\u0423\u0441\u043f\u0435\u0448\u043d\u043e DELETE"],
+            ["400", "Bad Request", "\u041d\u0435\u0432\u0430\u043b\u0438\u0434\u0435\u043d JSON / \u043b\u0438\u043f\u0441\u0432\u0430\u0449\u0438 \u043f\u043e\u043b\u0435\u0442\u0430 (Pydantic)"],
+            ["401", "Unauthorized", "\u041b\u0438\u043f\u0441\u0432\u0430\u0449 \u0438\u043b\u0438 \u043d\u0435\u0432\u0430\u043b\u0438\u0434\u0435\u043d JWT"],
+            ["403", "Forbidden", "\u0413\u0440\u0435\u0448\u043d\u0430 \u0440\u043e\u043b\u044f \u0438\u043b\u0438 \u043d\u0435 \u0435 \u0441\u043e\u0431\u0441\u0442\u0432\u0435\u043d\u0438\u043a\u044a\u0442 \u043d\u0430 \u0440\u0435\u0441\u0443\u0440\u0441\u0430"],
+            ["404", "Not Found", "\u0420\u0435\u0441\u0443\u0440\u0441\u044a\u0442 \u043d\u0435 \u0441\u044a\u0449\u0435\u0441\u0442\u0432\u0443\u0432\u0430"],
+            ["409", "Conflict", "\u0414\u0443\u0431\u043b\u0438\u0440\u0430\u043d\u0435 / \u043f\u0440\u0435\u043f\u043e\u043a\u0440\u0438\u0432\u0430\u043d\u0435 / \u0432\u0435\u0447\u0435 \u0441\u044a\u0449\u0435\u0441\u0442\u0432\u0443\u0432\u0430"],
+            ["422", "Unprocessable Entity", "\u041d\u0430\u0440\u0443\u0448\u0435\u043d\u043e \u0431\u0438\u0437\u043d\u0435\u0441 \u043f\u0440\u0430\u0432\u0438\u043b\u043e"],
         ],
         col_widths=[8, 22, 70],
     )
@@ -525,13 +528,12 @@ def build_pdf(output_path: str) -> None:
     # 2. ARCHITECTURE DESCRIPTION
     # ═══════════════════════════════════════════════════════════════════
     pdf.add_page()
-    pdf._heading(1, "2. Architecture Description")
+    pdf._heading(1, "2. \u041e\u043f\u0438\u0441\u0430\u043d\u0438\u0435 \u043d\u0430 \u0430\u0440\u0445\u0438\u0442\u0435\u043a\u0442\u0443\u0440\u0430\u0442\u0430")
 
-    # ── 2.1 High-Level Architecture ──────────────────────────────────
-    pdf._heading(2, "2.1 High-Level Architecture")
+    pdf._heading(2, "2.1 \u0410\u0440\u0445\u0438\u0442\u0435\u043a\u0442\u0443\u0440\u0430 \u043d\u0430 \u0432\u0438\u0441\u043e\u043a\u043e \u043d\u0438\u0432\u043e")
     pdf._body(
-        "The application follows a layered architecture with clear separation between "
-        "HTTP concerns, business logic, and data persistence:"
+        "\u041f\u0440\u0438\u043b\u043e\u0436\u0435\u043d\u0438\u0435\u0442\u043e \u0441\u043b\u0435\u0434\u0432\u0430 \u0441\u043b\u043e\u0439\u043d\u0430 \u0430\u0440\u0445\u0438\u0442\u0435\u043a\u0442\u0443\u0440\u0430 \u0441 \u044f\u0441\u043d\u043e \u0440\u0430\u0437\u0434\u0435\u043b\u0435\u043d\u0438\u0435 \u043c\u0435\u0436\u0434\u0443 "
+        "HTTP \u043e\u0431\u0440\u0430\u0431\u043e\u0442\u043a\u0430, \u0431\u0438\u0437\u043d\u0435\u0441 \u043b\u043e\u0433\u0438\u043a\u0430 \u0438 \u043f\u0435\u0440\u0441\u0438\u0441\u0442\u0435\u043d\u0442\u043d\u043e\u0441\u0442 \u043d\u0430 \u0434\u0430\u043d\u043d\u0438\u0442\u0435:"
     )
     pdf._code_block(textwrap.dedent("""\
         +-------------------+
@@ -539,39 +541,38 @@ def build_pdf(output_path: str) -> None:
         +--------+----------+
                  |  JSON over HTTP
         +--------v----------+
-        |  FastAPI Routers  |   Thin HTTP adapters: parse request,
-        |  (auth, doctors,  |   call service, return response.
-        |   patients,       |   No business logic here.
+        |  FastAPI Routers  |   Tonki HTTP adapteri: parsirovat
+        |  (auth, doctors,  |   zayavka, vikat servis, vrashtat
+        |   patients,       |   otgovor. Nyama biznes logika.
         |   schedules,      |
         |   appointments)   |
         +--------+----------+
                  |
         +--------v----------+
-        |  Service Layer    |   All business rules, validations,
-        |  (**/service.py)  |   and orchestration live here.
-        +--------+----------+   Raises custom AppException subclasses.
+        |  Service Layer    |   Vsichki biznes pravila, validacii
+        |  (**/service.py)  |   i orkestraciya zhiveyat tuk.
+        +--------+----------+   Hvarlya AppException.
                  |
         +--------v----------+
-        |  SQLAlchemy ORM   |   Declarative models define tables,
-        |  (**/models.py)   |   relationships, and constraints.
+        |  SQLAlchemy ORM   |   Deklarativni modeli definirat
+        |  (**/models.py)   |   tablici, relacii i ogranich.
         +--------+----------+
                  |
         +--------v----------+
-        |  SQLite (async)   |   aiosqlite driver; Alembic migrations
-        +-------------------+   manage schema evolution.
+        |  SQLite (async)   |   aiosqlite drayver; Alembic
+        +-------------------+   upravlyava migracii.
 
-        Cross-cutting:
-        - Pydantic schemas (**/schemas.py) define API contracts
-        - Custom exceptions (common/exceptions.py)
-        - Global error handlers (common/error_handlers.py)
+        Kros-sechenie:
+        - Pydantic shemi (**/schemas.py) definirat API kontrakta
+        - Izklycheniya (common/exceptions.py)
+        - Globalni error handlers (common/error_handlers.py)
         - JWT middleware (dependencies.py + auth/security.py)"""))
 
-    # ── 2.2 Project Structure ────────────────────────────────────────
-    pdf._heading(2, "2.2 Project Structure")
+    pdf._heading(2, "2.2 \u0421\u0442\u0440\u0443\u043a\u0442\u0443\u0440\u0430 \u043d\u0430 \u043f\u0440\u043e\u0435\u043a\u0442\u0430")
     pdf._body(
-        "The codebase uses feature-based module organization. Each domain concept "
-        "(auth, doctors, patients, schedules, appointments) has its own package with "
-        "router, service, schemas, and models. Shared utilities live in common/."
+        "\u041a\u043e\u0434\u043e\u0432\u0430\u0442\u0430 \u0431\u0430\u0437\u0430 \u0438\u0437\u043f\u043e\u043b\u0437\u0432\u0430 \u043c\u043e\u0434\u0443\u043b\u043d\u0430 \u043e\u0440\u0433\u0430\u043d\u0438\u0437\u0430\u0446\u0438\u044f \u043f\u043e \u0444\u0443\u043d\u043a\u0446\u0438\u043e\u043d\u0430\u043b\u043d\u043e\u0441\u0442. \u0412\u0441\u044f\u043a\u0430 \u0434\u043e\u043c\u0435\u0439\u043d\u043d\u0430 \u043a\u043e\u043d\u0446\u0435\u043f\u0446\u0438\u044f "
+        "(auth, doctors, patients, schedules, appointments) \u0438\u043c\u0430 \u0441\u043e\u0431\u0441\u0442\u0432\u0435\u043d \u043f\u0430\u043a\u0435\u0442 \u0441 "
+        "router, service, schemas \u0438 models. \u0421\u043f\u043e\u0434\u0435\u043b\u0435\u043d\u0438\u0442\u0435 \u0443\u0442\u0438\u043b\u0438\u0442\u0438 \u0441\u0430 \u0432 common/."
     )
     pdf._code_block(textwrap.dedent("""\
         app/
@@ -579,44 +580,19 @@ def build_pdf(output_path: str) -> None:
         +-- config.py            Pydantic-settings (.env loading)
         +-- database.py          Async engine, session factory, Base
         +-- dependencies.py      get_db, get_current_user, role guards
-        +-- auth/
-        |   +-- router.py        POST register/doctor, register/patient, login
-        |   +-- service.py       Registration, login logic
-        |   +-- schemas.py       Request/response Pydantic models
-        |   +-- security.py      JWT create/decode, password hash/verify
-        |   +-- models.py        User model (shared auth identity)
-        +-- doctors/
-        |   +-- router.py        GET /doctors, GET /doctors/{id}
-        |   +-- service.py       List + detail with eager-loaded hours
-        |   +-- schemas.py       DoctorResponse, DoctorListResponse
-        |   +-- models.py        Doctor model (1:1 FK to users)
-        +-- patients/
-        |   +-- router.py        GET /patients/me
-        |   +-- service.py       Profile retrieval
-        |   +-- schemas.py       PatientResponse
-        |   +-- models.py        Patient model (FK to users + doctors)
-        +-- schedules/
-        |   +-- router.py        Schedule CRUD endpoints
-        |   +-- service.py       CRUD + effective schedule resolution
-        |   +-- schemas.py       TimeSlot, Override, PermanentChange DTOs
-        |   +-- models.py        WorkingHours, TempOverride, PermanentChange
-        |   +-- slot_fitting.py  Shared interval-in-slot predicate
-        |   +-- appointment_conflicts.py  Pre-commit conflict check
-        +-- appointments/
-        |   +-- router.py        POST, DELETE, GET /appointments
-        |   +-- service.py       Create, cancel, list + validations
-        |   +-- schemas.py       AppointmentCreate/Response/ListFilters
-        |   +-- models.py        Appointment model
-        +-- common/
-            +-- exceptions.py    AppException hierarchy
-            +-- error_handlers.py  Global exception -> JSON handlers"""))
+        +-- auth/                Registraciya, login, JWT
+        +-- doctors/             Spisak i detayli na lekari
+        +-- patients/            Profil na pacienta
+        +-- schedules/           Grafici, overrides, permanentni promeni
+        +-- appointments/        Zapisvaniya: sazdavane, otmyana, spisak
+        +-- common/              Izklyucheniya i error handlers"""))
 
-    # ── 2.3 Database Schema ──────────────────────────────────────────
+    # -- 2.3 Database Schema
     pdf.add_page()
-    pdf._heading(2, "2.3 Database Schema (ER Diagram)")
+    pdf._heading(2, "2.3 \u0421\u0445\u0435\u043c\u0430 \u043d\u0430 \u0431\u0430\u0437\u0430\u0442\u0430 \u0434\u0430\u043d\u043d\u0438 (ER \u0434\u0438\u0430\u0433\u0440\u0430\u043c\u0430)")
     pdf._body(
-        "Seven tables with referential integrity enforced via foreign keys. "
-        "SQLite PRAGMA foreign_keys=ON is set on every connection."
+        "\u0421\u0435\u0434\u0435\u043c \u0442\u0430\u0431\u043b\u0438\u0446\u0438 \u0441 \u0440\u0435\u0444\u0435\u0440\u0435\u043d\u0442\u043d\u0430 \u0446\u044f\u043b\u043e\u0441\u0442, \u043e\u0441\u0438\u0433\u0443\u0440\u0435\u043d\u0430 \u0447\u0440\u0435\u0437 \u0432\u044a\u043d\u0448\u043d\u0438 \u043a\u043b\u044e\u0447\u043e\u0432\u0435. "
+        "SQLite PRAGMA foreign_keys=ON \u0441\u0435 \u0437\u0430\u0434\u0430\u0432\u0430 \u043f\u0440\u0438 \u0432\u0441\u044f\u043a\u0430 \u0432\u0440\u044a\u0437\u043a\u0430."
     )
     pdf._code_block(textwrap.dedent("""\
         +------------------+          +------------------+
@@ -649,15 +625,12 @@ def build_pdf(output_path: str) -> None:
         +------------------+       | FK doctor_id (UNQ)  |
         | PK id            |       | start_datetime      |
         | FK doctor_id     |       | end_datetime        |
-        | FK patient_id    |       | created_at          |
-        | start_datetime   |       | updated_at          |
-        | end_datetime     |       +---------------------+
-        | status           |              |
-        | cancelled_by     |              | 1
-        | created_at       |              |
-        | updated_at       |    +---------v--------------+
-        +------------------+    | temp_override_hours    |
-                                +------------------------+
+        | FK patient_id    |       +---------------------+
+        | start_datetime   |              |
+        | end_datetime     |              | 1
+        | status           |    +---------v--------------+
+        | cancelled_by     |    | temp_override_hours    |
+        +------------------+    +------------------------+
                                 | PK id                  |
         +-------------------+   | FK override_id         |
         | permanent_changes |   | day_of_week            |
@@ -675,20 +648,20 @@ def build_pdf(output_path: str) -> None:
                                 | is_break               |
                                 +------------------------+"""))
 
-    pdf._body("Key constraints:")
-    pdf._bullet("users.email has a UNIQUE index")
-    pdf._bullet("temporary_overrides.doctor_id is UNIQUE (max 1 per doctor)")
-    pdf._bullet("working_hours has UNIQUE(doctor_id, day_of_week, start_time)")
-    pdf._bullet("Appointments have a composite index on (doctor_id, start_datetime, end_datetime)")
-    pdf._bullet("CHECK constraints enforce valid role, status, and day_of_week values")
+    pdf._body("\u041a\u043b\u044e\u0447\u043e\u0432\u0438 \u043e\u0433\u0440\u0430\u043d\u0438\u0447\u0435\u043d\u0438\u044f:")
+    pdf._bullet("users.email \u0438\u043c\u0430 UNIQUE \u0438\u043d\u0434\u0435\u043a\u0441")
+    pdf._bullet("temporary_overrides.doctor_id \u0435 UNIQUE (\u043c\u0430\u043a\u0441. 1 \u043d\u0430 \u043b\u0435\u043a\u0430\u0440)")
+    pdf._bullet("working_hours \u0438\u043c\u0430 UNIQUE(doctor_id, day_of_week, start_time)")
+    pdf._bullet("\u0417\u0430\u043f\u0438\u0441\u0432\u0430\u043d\u0438\u044f\u0442\u0430 \u0438\u043c\u0430\u0442 \u0441\u044a\u0441\u0442\u0430\u0432\u0435\u043d \u0438\u043d\u0434\u0435\u043a\u0441 \u043d\u0430 (doctor_id, start_datetime, end_datetime)")
+    pdf._bullet("CHECK \u043e\u0433\u0440\u0430\u043d\u0438\u0447\u0435\u043d\u0438\u044f \u0437\u0430 \u0432\u0430\u043b\u0438\u0434\u043d\u0438 \u0441\u0442\u043e\u0439\u043d\u043e\u0441\u0442\u0438 \u043d\u0430 role, status \u0438 day_of_week")
 
-    # ── 2.4 Class Diagram ────────────────────────────────────────────
+    # -- 2.4 Class Diagram
     pdf.add_page()
-    pdf._heading(2, "2.4 Class Diagram (UML)")
+    pdf._heading(2, "2.4 \u041a\u043b\u0430\u0441\u043e\u0432\u0430 \u0434\u0438\u0430\u0433\u0440\u0430\u043c\u0430 (UML)")
     pdf._body(
-        "The class diagram below shows the main domain models and their relationships. "
-        "All models inherit from SQLAlchemy's DeclarativeBase. Models with timestamps "
-        "mix in TimestampMixin."
+        "\u041a\u043b\u0430\u0441\u043e\u0432\u0430\u0442\u0430 \u0434\u0438\u0430\u0433\u0440\u0430\u043c\u0430 \u043f\u043e-\u0434\u043e\u043b\u0443 \u043f\u043e\u043a\u0430\u0437\u0432\u0430 \u043e\u0441\u043d\u043e\u0432\u043d\u0438\u0442\u0435 \u0434\u043e\u043c\u0435\u0439\u043d\u043d\u0438 \u043c\u043e\u0434\u0435\u043b\u0438 \u0438 \u0442\u0435\u0445\u043d\u0438\u0442\u0435 \u0432\u0440\u044a\u0437\u043a\u0438. "
+        "\u0412\u0441\u0438\u0447\u043a\u0438 \u043c\u043e\u0434\u0435\u043b\u0438 \u043d\u0430\u0441\u043b\u0435\u0434\u044f\u0432\u0430\u0442 DeclarativeBase \u043d\u0430 SQLAlchemy. \u041c\u043e\u0434\u0435\u043b\u0438\u0442\u0435 \u0441 \u0432\u0440\u0435\u043c\u0435\u0432\u0438 \u043f\u0435\u0447\u0430\u0442\u0438 "
+        "\u0438\u0437\u043f\u043e\u043b\u0437\u0432\u0430\u0442 TimestampMixin."
     )
     pdf._code_block(textwrap.dedent("""\
         +===============================+
@@ -752,59 +725,36 @@ def build_pdf(output_path: str) -> None:
              |  +-----------------------+
              |  |change_id (FK)         |
              |  |day, start, end, break |
-             |  +-----------------------+
+             |  +-----------------------+"""))
 
-        Service Layer (key classes / functions):
-        +--------------------------------------------+
-        | auth/service.py                            |
-        |   register_doctor(), register_patient(),   |
-        |   authenticate()                           |
-        +--------------------------------------------+
-        | schedules/service.py                       |
-        |   get_effective_schedule()                  |
-        |   update_working_hours()                   |
-        |   create_temporary_override()              |
-        |   create_permanent_change()                |
-        |   apply_pending_permanent_changes()        |
-        +--------------------------------------------+
-        | appointments/service.py                    |
-        |   create_appointment()                     |
-        |   cancel_appointment()                     |
-        |   list_appointments()                      |
-        +--------------------------------------------+
-        | dependencies.py                            |
-        |   get_db(), get_current_user()             |
-        |   require_doctor(), require_patient()      |
-        +--------------------------------------------+"""))
-
-    # ── 2.5 Sequence Diagrams ────────────────────────────────────────
+    # -- 2.5 Sequence Diagrams
     pdf.add_page()
-    pdf._heading(2, "2.5 Sequence Diagrams")
+    pdf._heading(2, "2.5 \u0414\u0438\u0430\u0433\u0440\u0430\u043c\u0438 \u043d\u0430 \u043f\u043e\u0441\u043b\u0435\u0434\u043e\u0432\u0430\u0442\u0435\u043b\u043d\u043e\u0441\u0442\u0442\u0430")
 
-    pdf._heading(3, "2.5.1 Create Appointment Flow")
+    pdf._heading(3, "2.5.1 \u041f\u043e\u0442\u043e\u043a \u043d\u0430 \u0441\u044a\u0437\u0434\u0430\u0432\u0430\u043d\u0435 \u043d\u0430 \u0437\u0430\u043f\u0438\u0441\u0432\u0430\u043d\u0435")
     pdf._code_block(textwrap.dedent("""\
-        Patient              Router             Service             DB
+        Pacient              Router             Service             DB
           |                    |                   |                 |
           |-- POST /appt ----->|                   |                 |
           |                    |-- create_appt --->|                 |
           |                    |                   |-- SELECT patient|
           |                    |                   |<-- patient row -|
           |                    |                   |                 |
-          |                    |                   | [check personal doctor]
-          |                    |                   | [check 24h rule]
-          |                    |                   | [check same day]
+          |                    |                   | [lichen lekar?]
+          |                    |                   | [24ch pravilo?]
+          |                    |                   | [edin den?]
           |                    |                   |                 |
           |                    |                   |-- get_effective |
           |                    |                   |   _schedule  -->|
-          |                    |                   |<-- slots -------|
+          |                    |                   |<-- slotove -----|
           |                    |                   |                 |
-          |                    |                   | [check fits in slot]
+          |                    |                   | [vpasva li v slot?]
           |                    |                   |                 |
           |                    |                   |-- SELECT count  |
           |                    |                   |   (overlap)  -->|
           |                    |                   |<-- count -------|
           |                    |                   |                 |
-          |                    |                   | [check no overlap]
+          |                    |                   | [nyama li prekritie?]
           |                    |                   |                 |
           |                    |                   |-- INSERT appt ->|
           |                    |                   |-- COMMIT ------>|
@@ -812,37 +762,37 @@ def build_pdf(output_path: str) -> None:
           |                    |<-- AppointmentResponse -------------|
           |<-- 201 Created ----|                   |                 |"""))
 
-    pdf._heading(3, "2.5.2 Schedule Resolution (get_effective_schedule)")
+    pdf._heading(3, "2.5.2 \u0420\u0430\u0437\u0440\u0435\u0448\u0430\u0432\u0430\u043d\u0435 \u043d\u0430 \u0433\u0440\u0430\u0444\u0438\u043a (get_effective_schedule)")
     pdf._code_block(textwrap.dedent("""\
-        Caller               Service                   DB
+        Vikasht              Service                   DB
           |                    |                         |
           |-- get_effective -->|                         |
-          |   (doctor, date)   |                         |
+          |   (lekar, data)    |                         |
           |                    |-- apply_pending         |
-          |                    |   (separate session) -->|
+          |                    |   (otdelna sesiya)  --->|
           |                    |<-- committed -----------|
           |                    |                         |
           |                    |-- SELECT temp_override  |
-          |                    |   WHERE covers date  -->|
-          |                    |<-- override or NULL ----|
+          |                    |   WHERE pokriva data -->|
+          |                    |<-- override ili NULL ---|
           |                    |                         |
-          |             [if override found: return override slots]
+          |             [ako ima override: vrushtane na negovite slotove]
           |                    |                         |
           |                    |-- SELECT perm_change    |
-          |                    |   WHERE eff_date<=date->|
-          |                    |<-- change or NULL ------|
+          |                    |   WHERE eff_date<=data->|
+          |                    |<-- promyana ili NULL ---|
           |                    |                         |
-          |             [if perm change found: return its slots]
+          |             [ako ima prom.: vrushtane na slotovete y]
           |                    |                         |
           |                    |-- SELECT working_hours  |
           |                    |   WHERE weekday ------->|
-          |                    |<-- base slots ----------|
+          |                    |<-- bazovi slotove ------|
           |                    |                         |
           |<-- list[TimeSlot] -|                         |"""))
 
-    pdf._heading(3, "2.5.3 Schedule Update with Conflict Check")
+    pdf._heading(3, "2.5.3 \u0410\u043a\u0442\u0443\u0430\u043b\u0438\u0437\u0430\u0446\u0438\u044f \u043d\u0430 \u0433\u0440\u0430\u0444\u0438\u043a \u0441 \u043f\u0440\u043e\u0432\u0435\u0440\u043a\u0430 \u0437\u0430 \u043a\u043e\u043d\u0444\u043b\u0438\u043a\u0442\u0438")
     pdf._code_block(textwrap.dedent("""\
-        Doctor               Router             Service             DB
+        Lekar                Router             Service             DB
           |                    |                   |                 |
           |-- PUT schedule --->|                   |                 |
           |                    |-- update_wh ----->|                 |
@@ -850,16 +800,15 @@ def build_pdf(output_path: str) -> None:
           |                    |                   |-- INSERT new -->|
           |                    |                   |-- FLUSH ------->|
           |                    |                   |                 |
-          |                    |                   |-- assert_no     |
-          |                    |                   |   conflicts --->|
-          |                    |                   |  (for each      |
-          |                    |                   |   scheduled     |
-          |                    |                   |   appointment:  |
-          |                    |                   |   check fits    |
-          |                    |                   |   new slots)    |
+          |                    |                   |-- proverka za   |
+          |                    |                   |   konflikti --->|
+          |                    |                   |  (za vsyako     |
+          |                    |                   |   planirano     |
+          |                    |                   |   zapisvane:    |
+          |                    |                   |   vpasva li?)   |
           |                    |                   |                 |
-          |              [if conflict: ROLLBACK, raise 422]
-          |              [if ok: COMMIT]
+          |              [ako konflikt: ROLLBACK, hvurlyane 422]
+          |              [ako OK: COMMIT]
           |                    |                   |                 |
           |<-- 200 OK ---------|                   |                 |"""))
 
@@ -867,162 +816,157 @@ def build_pdf(output_path: str) -> None:
     # 3. SELF-ANALYSIS
     # ═══════════════════════════════════════════════════════════════════
     pdf.add_page()
-    pdf._heading(1, "3. Self-Analysis")
+    pdf._heading(1, "3. \u0421\u0430\u043c\u043e\u0430\u043d\u0430\u043b\u0438\u0437")
 
-    # ── 3.1 SOLID ────────────────────────────────────────────────────
-    pdf._heading(2, "3.1 SOLID Principles Adherence")
+    pdf._heading(2, "3.1 \u0421\u043f\u0430\u0437\u0432\u0430\u043d\u0435 \u043d\u0430 SOLID \u043f\u0440\u0438\u043d\u0446\u0438\u043f\u0438\u0442\u0435")
 
-    pdf._heading(3, "Single Responsibility Principle (SRP)")
+    pdf._heading(3, "\u041f\u0440\u0438\u043d\u0446\u0438\u043f \u043d\u0430 \u0435\u0434\u0438\u043d\u0441\u0442\u0432\u0435\u043d\u0430\u0442\u0430 \u043e\u0442\u0433\u043e\u0432\u043e\u0440\u043d\u043e\u0441\u0442 (SRP)")
     pdf._body(
-        "Each module handles exactly one domain concept. Within a module, "
-        "responsibilities are further separated:"
+        "\u0412\u0441\u0435\u043a\u0438 \u043c\u043e\u0434\u0443\u043b \u043e\u0431\u0440\u0430\u0431\u043e\u0442\u0432\u0430 \u0442\u043e\u0447\u043d\u043e \u0435\u0434\u043d\u0430 \u0434\u043e\u043c\u0435\u0439\u043d\u043d\u0430 \u043a\u043e\u043d\u0446\u0435\u043f\u0446\u0438\u044f. \u0412 \u0440\u0430\u043c\u043a\u0438\u0442\u0435 \u043d\u0430 \u043c\u043e\u0434\u0443\u043b\u0430 "
+        "\u043e\u0442\u0433\u043e\u0432\u043e\u0440\u043d\u043e\u0441\u0442\u0438\u0442\u0435 \u0441\u0430 \u0434\u043e\u043f\u044a\u043b\u043d\u0438\u0442\u0435\u043b\u043d\u043e \u0440\u0430\u0437\u0434\u0435\u043b\u0435\u043d\u0438:"
     )
-    pdf._bullet("Routers handle HTTP parsing and response formatting only.")
-    pdf._bullet("Services contain all business logic, validation, and orchestration.")
-    pdf._bullet("Models define persistence structure and database constraints.")
-    pdf._bullet("Schemas define the API contract (request validation, response shape).")
+    pdf._bullet("Router-\u0438\u0442\u0435 \u043e\u0431\u0440\u0430\u0431\u043e\u0442\u0432\u0430\u0442 \u0441\u0430\u043c\u043e HTTP \u043f\u0430\u0440\u0441\u0432\u0430\u043d\u0435 \u0438 \u0444\u043e\u0440\u043c\u0430\u0442\u0438\u0440\u0430\u043d\u0435 \u043d\u0430 \u043e\u0442\u0433\u043e\u0432\u043e\u0440\u0438\u0442\u0435.")
+    pdf._bullet("Service-\u0438\u0442\u0435 \u0441\u044a\u0434\u044a\u0440\u0436\u0430\u0442 \u0446\u044f\u043b\u0430\u0442\u0430 \u0431\u0438\u0437\u043d\u0435\u0441 \u043b\u043e\u0433\u0438\u043a\u0430, \u0432\u0430\u043b\u0438\u0434\u0430\u0446\u0438\u0438 \u0438 \u043e\u0440\u043a\u0435\u0441\u0442\u0440\u0430\u0446\u0438\u044f.")
+    pdf._bullet("\u041c\u043e\u0434\u0435\u043b\u0438\u0442\u0435 \u0434\u0435\u0444\u0438\u043d\u0438\u0440\u0430\u0442 \u043f\u0435\u0440\u0441\u0438\u0441\u0442\u0435\u043d\u0442\u043d\u0430\u0442\u0430 \u0441\u0442\u0440\u0443\u043a\u0442\u0443\u0440\u0430 \u0438 \u043e\u0433\u0440\u0430\u043d\u0438\u0447\u0435\u043d\u0438\u044f\u0442\u0430 \u0432 \u0431\u0430\u0437\u0430\u0442\u0430.")
+    pdf._bullet("\u0421\u0445\u0435\u043c\u0438\u0442\u0435 \u0434\u0435\u0444\u0438\u043d\u0438\u0440\u0430\u0442 API \u043a\u043e\u043d\u0442\u0440\u0430\u043a\u0442\u0430 (\u0432\u0430\u043b\u0438\u0434\u0430\u0446\u0438\u044f \u043d\u0430 \u0437\u0430\u044f\u0432\u043a\u0438, \u0444\u043e\u0440\u043c\u0430 \u043d\u0430 \u043e\u0442\u0433\u043e\u0432\u043e\u0440\u0438).")
     pdf._bullet(
-        "The common/ package centralizes cross-cutting concerns: exception classes "
-        "in exceptions.py and global error handlers in error_handlers.py."
+        "\u041f\u0430\u043a\u0435\u0442\u044a\u0442 common/ \u0446\u0435\u043d\u0442\u0440\u0430\u043b\u0438\u0437\u0438\u0440\u0430 \u043a\u0440\u043e\u0441-\u0441\u0435\u0447\u0435\u043d\u0438\u044f\u0442\u0430: \u043a\u043b\u0430\u0441\u043e\u0432\u0435 \u0437\u0430 \u0438\u0437\u043a\u043b\u044e\u0447\u0435\u043d\u0438\u044f "
+        "\u0432 exceptions.py \u0438 \u0433\u043b\u043e\u0431\u0430\u043b\u043d\u0438 \u043e\u0431\u0440\u0430\u0431\u043e\u0442\u0447\u0438\u0446\u0438 \u043d\u0430 \u0433\u0440\u0435\u0448\u043a\u0438 \u0432 error_handlers.py."
     )
     pdf._body(
-        "Example: appointments/service.py owns all booking rules (24h, overlap, working hours). "
-        "The router never checks business rules; it delegates entirely to the service."
+        "\u041f\u0440\u0438\u043c\u0435\u0440: appointments/service.py \u043f\u0440\u0438\u0442\u0435\u0436\u0430\u0432\u0430 \u0432\u0441\u0438\u0447\u043a\u0438 \u043f\u0440\u0430\u0432\u0438\u043b\u0430 \u0437\u0430 \u0437\u0430\u043f\u0438\u0441\u0432\u0430\u043d\u0438\u044f (24\u0447, \u043f\u0440\u0435\u043f\u043e\u043a\u0440\u0438\u0432\u0430\u043d\u0435, \u0440\u0430\u0431. \u0432\u0440\u0435\u043c\u0435). "
+        "Router-\u044a\u0442 \u043d\u0438\u043a\u043e\u0433\u0430 \u043d\u0435 \u043f\u0440\u043e\u0432\u0435\u0440\u044f\u0432\u0430 \u0431\u0438\u0437\u043d\u0435\u0441 \u043f\u0440\u0430\u0432\u0438\u043b\u0430; \u0434\u0435\u043b\u0435\u0433\u0438\u0440\u0430 \u0438\u0437\u0446\u044f\u043b\u043e \u043d\u0430 service-\u0430."
     )
 
-    pdf._heading(3, "Open/Closed Principle (OCP)")
+    pdf._heading(3, "\u041f\u0440\u0438\u043d\u0446\u0438\u043f \u043e\u0442\u0432\u043e\u0440\u0435\u043d\u043e\u0441\u0442/\u0437\u0430\u0442\u0432\u043e\u0440\u0435\u043d\u043e\u0441\u0442 (OCP)")
     pdf._body(
-        "The schedule resolution system demonstrates OCP. The get_effective_schedule() function "
-        "checks three schedule layers in priority order (temporary override > permanent change > "
-        "base working hours). Adding a new layer (e.g., holiday calendars) requires adding a new "
-        "model and inserting one more check step, without modifying the existing override or "
-        "permanent-change logic."
+        "\u0421\u0438\u0441\u0442\u0435\u043c\u0430\u0442\u0430 \u0437\u0430 \u0440\u0430\u0437\u0440\u0435\u0448\u0430\u0432\u0430\u043d\u0435 \u043d\u0430 \u0433\u0440\u0430\u0444\u0438\u0446\u0438 \u0434\u0435\u043c\u043e\u043d\u0441\u0442\u0440\u0438\u0440\u0430 OCP. get_effective_schedule() \u043f\u0440\u043e\u0432\u0435\u0440\u044f\u0432\u0430 "
+        "\u0442\u0440\u0438 \u0441\u043b\u043e\u044f \u043f\u043e \u043f\u0440\u0438\u043e\u0440\u0438\u0442\u0435\u0442 (\u0432\u0440\u0435\u043c\u0435\u043d\u043d\u043e \u043f\u0440\u0435\u0434\u0435\u0444\u0438\u043d\u0438\u0440\u0430\u043d\u0435 > \u043f\u043e\u0441\u0442\u043e\u044f\u043d\u043d\u0430 \u043f\u0440\u043e\u043c\u044f\u043d\u0430 > "
+        "\u0431\u0430\u0437\u043e\u0432\u043e \u0440\u0430\u0431\u043e\u0442\u043d\u043e \u0432\u0440\u0435\u043c\u0435). \u0414\u043e\u0431\u0430\u0432\u044f\u043d\u0435\u0442\u043e \u043d\u0430 \u043d\u043e\u0432 \u0441\u043b\u043e\u0439 (\u043d\u0430\u043f\u0440. \u043a\u0430\u043b\u0435\u043d\u0434\u0430\u0440 \u0437\u0430 \u043f\u0440\u0430\u0437\u043d\u0438\u0446\u0438) "
+        "\u0438\u0437\u0438\u0441\u043a\u0432\u0430 \u0441\u0430\u043c\u043e \u043d\u043e\u0432 \u043c\u043e\u0434\u0435\u043b \u0438 \u043e\u0449\u0435 \u0435\u0434\u043d\u0430 \u0441\u0442\u044a\u043f\u043a\u0430 \u043d\u0430 \u043f\u0440\u043e\u0432\u0435\u0440\u043a\u0430, \u0431\u0435\u0437 \u043f\u0440\u043e\u043c\u044f\u043d\u0430 \u043d\u0430 \u0441\u044a\u0449\u0435\u0441\u0442\u0432\u0443\u0432\u0430\u0449\u0430\u0442\u0430 \u043b\u043e\u0433\u0438\u043a\u0430."
     )
     pdf._body(
-        "The exception hierarchy (AppException -> BusinessRuleException, ConflictException, etc.) "
-        "is also open for extension. New error types can be added without changing the global "
-        "error handler, which catches the base AppException class."
-    )
-
-    pdf._heading(3, "Liskov Substitution Principle (LSP)")
-    pdf._body(
-        "Both Doctor and Patient link to User via a 1:1 foreign key. Any code that operates on "
-        "a User (authentication, token creation, get_current_user dependency) works identically "
-        "regardless of whether the user is a doctor or patient. The role field is used for "
-        "authorization checks (require_doctor, require_patient), but the authentication flow "
-        "itself is fully substitutable."
+        "\u0419\u0435\u0440\u0430\u0440\u0445\u0438\u044f\u0442\u0430 \u043d\u0430 \u0438\u0437\u043a\u043b\u044e\u0447\u0435\u043d\u0438\u044f (AppException -> BusinessRuleException, ConflictException \u0438 \u0434\u0440.) "
+        "\u0441\u044a\u0449\u043e \u0435 \u043e\u0442\u0432\u043e\u0440\u0435\u043d\u0430 \u0437\u0430 \u0440\u0430\u0437\u0448\u0438\u0440\u0435\u043d\u0438\u0435. \u041d\u043e\u0432\u0438 \u0442\u0438\u043f\u043e\u0432\u0435 \u0433\u0440\u0435\u0448\u043a\u0438 \u043c\u043e\u0433\u0430\u0442 \u0434\u0430 \u0441\u0435 \u0434\u043e\u0431\u0430\u0432\u044f\u0442 \u0431\u0435\u0437 \u043f\u0440\u043e\u043c\u044f\u043d\u0430 "
+        "\u043d\u0430 \u0433\u043b\u043e\u0431\u0430\u043b\u043d\u0438\u044f error handler, \u043a\u043e\u0439\u0442\u043e \u0445\u0432\u0430\u0449\u0430 \u0431\u0430\u0437\u043e\u0432\u0438\u044f AppException \u043a\u043b\u0430\u0441."
     )
 
-    pdf._heading(3, "Interface Segregation Principle (ISP)")
+    pdf._heading(3, "\u041f\u0440\u0438\u043d\u0446\u0438\u043f \u043d\u0430 \u0437\u0430\u043c\u0435\u0441\u0442\u0432\u0430\u043d\u0435\u0442\u043e \u043d\u0430 \u041b\u0438\u0441\u043a\u043e\u0432 (LSP)")
     pdf._body(
-        "Pydantic schemas are scoped per operation. DoctorRegisterRequest, PatientRegisterRequest, "
-        "LoginRequest, and TokenResponse are all separate models. The appointment module has "
-        "distinct AppointmentCreateRequest, AppointmentResponse, and AppointmentListFilters. "
-        "No client is forced to deal with fields irrelevant to their operation."
-    )
-    pdf._body(
-        "FastAPI dependencies (get_current_user, require_doctor, require_patient) are "
-        "fine-grained. Endpoints declare exactly the auth level they need."
+        "Doctor \u0438 Patient \u0441\u0430 \u0441\u0432\u044a\u0440\u0437\u0430\u043d\u0438 \u043a\u044a\u043c User \u0447\u0440\u0435\u0437 1:1 \u0432\u044a\u043d\u0448\u0435\u043d \u043a\u043b\u044e\u0447. \u0412\u0441\u0435\u043a\u0438 \u043a\u043e\u0434, \u043a\u043e\u0439\u0442\u043e \u0440\u0430\u0431\u043e\u0442\u0438 \u0441 "
+        "User (\u0430\u0443\u0442\u0435\u043d\u0442\u0438\u043a\u0430\u0446\u0438\u044f, \u0441\u044a\u0437\u0434\u0430\u0432\u0430\u043d\u0435 \u043d\u0430 \u0442\u043e\u043a\u0435\u043d, get_current_user), \u0440\u0430\u0431\u043e\u0442\u0438 \u0435\u0434\u043d\u0430\u043a\u0432\u043e "
+        "\u043d\u0435\u0437\u0430\u0432\u0438\u0441\u0438\u043c\u043e \u0434\u0430\u043b\u0438 \u043f\u043e\u0442\u0440\u0435\u0431\u0438\u0442\u0435\u043b\u044f\u0442 \u0435 \u043b\u0435\u043a\u0430\u0440 \u0438\u043b\u0438 \u043f\u0430\u0446\u0438\u0435\u043d\u0442. \u041f\u043e\u043b\u0435\u0442\u043e role \u0441\u0435 \u0438\u0437\u043f\u043e\u043b\u0437\u0432\u0430 \u0441\u0430\u043c\u043e \u0437\u0430 "
+        "\u0430\u0432\u0442\u043e\u0440\u0438\u0437\u0430\u0446\u0438\u043e\u043d\u043d\u0438 \u043f\u0440\u043e\u0432\u0435\u0440\u043a\u0438, \u043d\u043e \u0441\u0430\u043c\u0438\u044f\u0442 \u043f\u043e\u0442\u043e\u043a \u043d\u0430 \u0430\u0443\u0442\u0435\u043d\u0442\u0438\u043a\u0430\u0446\u0438\u044f \u0435 \u043d\u0430\u043f\u044a\u043b\u043d\u043e \u0437\u0430\u043c\u0435\u0441\u0442\u0438\u043c."
     )
 
-    pdf._heading(3, "Dependency Inversion Principle (DIP)")
+    pdf._heading(3, "\u041f\u0440\u0438\u043d\u0446\u0438\u043f \u043d\u0430 \u0440\u0430\u0437\u0434\u0435\u043b\u044f\u043d\u0435 \u043d\u0430 \u0438\u043d\u0442\u0435\u0440\u0444\u0435\u0439\u0441\u0438\u0442\u0435 (ISP)")
     pdf._body(
-        "Services depend on the AsyncSession abstraction, never on concrete engine details. "
-        "This is demonstrated by the test suite, which seamlessly swaps the production SQLite "
-        "file for an in-memory database by overriding the get_db dependency. "
-        "No service code changes are needed."
+        "Pydantic \u0441\u0445\u0435\u043c\u0438\u0442\u0435 \u0441\u0430 \u043e\u0433\u0440\u0430\u043d\u0438\u0447\u0435\u043d\u0438 \u043f\u043e \u043e\u043f\u0435\u0440\u0430\u0446\u0438\u044f. DoctorRegisterRequest, PatientRegisterRequest, "
+        "LoginRequest \u0438 TokenResponse \u0441\u0430 \u0432\u0441\u0438\u0447\u043a\u0438 \u043e\u0442\u0434\u0435\u043b\u043d\u0438 \u043c\u043e\u0434\u0435\u043b\u0438. \u041c\u043e\u0434\u0443\u043b\u044a\u0442 \u0437\u0430 \u0437\u0430\u043f\u0438\u0441\u0432\u0430\u043d\u0438\u044f \u0438\u043c\u0430 "
+        "\u043e\u0442\u0434\u0435\u043b\u043d\u0438 AppointmentCreateRequest, AppointmentResponse \u0438 AppointmentListFilters. "
+        "\u041d\u0438\u043a\u043e\u0439 \u043a\u043b\u0438\u0435\u043d\u0442 \u043d\u0435 \u0435 \u043f\u0440\u0438\u043d\u0443\u0434\u0435\u043d \u0434\u0430 \u0440\u0430\u0431\u043e\u0442\u0438 \u0441 \u043f\u043e\u043b\u0435\u0442\u0430, \u043d\u0435\u0440\u0435\u043b\u0435\u0432\u0430\u043d\u0442\u043d\u0438 \u0437\u0430 \u043d\u0435\u0433\u043e\u0432\u0430\u0442\u0430 \u043e\u043f\u0435\u0440\u0430\u0446\u0438\u044f."
     )
     pdf._body(
-        "The dependency injection pattern via FastAPI's Depends() mechanism decouples "
-        "request handling from database session management and authentication."
+        "\u0417\u0430\u0432\u0438\u0441\u0438\u043c\u043e\u0441\u0442\u0438\u0442\u0435 \u043d\u0430 FastAPI (get_current_user, require_doctor, require_patient) \u0441\u0430 \u0444\u0438\u043d\u043e "
+        "\u0433\u0440\u0430\u043d\u0443\u043b\u0438\u0440\u0430\u043d\u0438. \u041a\u0440\u0430\u0439\u043d\u0438\u0442\u0435 \u0442\u043e\u0447\u043a\u0438 \u0434\u0435\u043a\u043b\u0430\u0440\u0438\u0440\u0430\u0442 \u0442\u043e\u0447\u043d\u043e \u043d\u0435\u043e\u0431\u0445\u043e\u0434\u0438\u043c\u043e\u0442\u043e \u043d\u0438\u0432\u043e \u043d\u0430 \u0430\u0443\u0442\u0435\u043d\u0442\u0438\u043a\u0430\u0446\u0438\u044f."
     )
 
-    # ── 3.2 Design Trade-offs ────────────────────────────────────────
-    pdf._heading(2, "3.2 Design Trade-offs")
-
-    pdf._heading(3, "SQLite vs. PostgreSQL")
+    pdf._heading(3, "\u041f\u0440\u0438\u043d\u0446\u0438\u043f \u043d\u0430 \u0438\u043d\u0432\u0435\u0440\u0441\u0438\u044f \u043d\u0430 \u0437\u0430\u0432\u0438\u0441\u0438\u043c\u043e\u0441\u0442\u0438\u0442\u0435 (DIP)")
     pdf._body(
-        "SQLite was chosen for simplicity (zero-config, file-based). This suits the project "
-        "scope perfectly but limits concurrent write throughput and advanced features like "
-        "LISTEN/NOTIFY. The async driver (aiosqlite) wraps synchronous SQLite in a thread pool. "
-        "Migration to PostgreSQL requires only changing DATABASE_URL and installing asyncpg; "
-        "all queries use the ORM and are database-agnostic."
+        "Service-\u0438\u0442\u0435 \u0437\u0430\u0432\u0438\u0441\u044f\u0442 \u043e\u0442 \u0430\u0431\u0441\u0442\u0440\u0430\u043a\u0446\u0438\u044f\u0442\u0430 AsyncSession, \u043d\u0438\u043a\u043e\u0433\u0430 \u043e\u0442 \u043a\u043e\u043d\u043a\u0440\u0435\u0442\u043d\u0438 \u0434\u0435\u0442\u0430\u0439\u043b\u0438 \u043d\u0430 engine. "
+        "\u0422\u043e\u0432\u0430 \u0441\u0435 \u0434\u0435\u043c\u043e\u043d\u0441\u0442\u0440\u0438\u0440\u0430 \u043e\u0442 \u0442\u0435\u0441\u0442\u043e\u0432\u0435\u0442\u0435, \u043a\u043e\u0438\u0442\u043e \u0437\u0430\u043c\u0435\u043d\u044f\u0442 \u043f\u0440\u043e\u0438\u0437\u0432\u043e\u0434\u0441\u0442\u0432\u0435\u043d\u0430\u0442\u0430 SQLite \u0431\u0430\u0437\u0430 "
+        "\u0441 \u0431\u0430\u0437\u0430 \u0432 \u043f\u0430\u043c\u0435\u0442\u0442\u0430 \u0447\u0440\u0435\u0437 \u043f\u0440\u0435\u0434\u0435\u0444\u0438\u043d\u0438\u0440\u0430\u043d\u0435 \u043d\u0430 get_db \u0437\u0430\u0432\u0438\u0441\u0438\u043c\u043e\u0441\u0442\u0442\u0430. "
+        "\u041d\u0435 \u0441\u0430 \u043d\u0443\u0436\u043d\u0438 \u043f\u0440\u043e\u043c\u0435\u043d\u0438 \u0432 \u043a\u043e\u0434\u0430 \u043d\u0430 service-\u0438\u0442\u0435."
     )
-
-    pdf._heading(3, "Eager Promotion of Permanent Changes")
     pdf._body(
-        "Permanent schedule changes are promoted to base working_hours both at startup (lifespan) "
-        "and on-demand before each get_effective_schedule() call. This is simple and correct but "
-        "performs a global scan of all unapplied changes on every schedule read. For a "
-        "course-scale application this is negligible; at scale, a background scheduler (e.g., "
-        "Celery beat, APScheduler, or a cron job) would be more appropriate."
+        "\u041f\u0430\u0442\u044a\u0440\u043d\u044a\u0442 \u0437\u0430 dependency injection \u0447\u0440\u0435\u0437 Depends() \u043c\u0435\u0445\u0430\u043d\u0438\u0437\u043c\u0430 \u043d\u0430 FastAPI "
+        "\u0440\u0430\u0437\u0434\u0435\u043b\u044f \u043e\u0431\u0440\u0430\u0431\u043e\u0442\u043a\u0430\u0442\u0430 \u043d\u0430 \u0437\u0430\u044f\u0432\u043a\u0438 \u043e\u0442 \u0443\u043f\u0440\u0430\u0432\u043b\u0435\u043d\u0438\u0435\u0442\u043e \u043d\u0430 DB \u0441\u0435\u0441\u0438\u0438 \u0438 \u0430\u0443\u0442\u0435\u043d\u0442\u0438\u043a\u0430\u0446\u0438\u044f\u0442\u0430."
     )
 
-    pdf._heading(3, "Appointment Conflict Check on Schedule Mutation")
+    # -- 3.2 Design Trade-offs
+    pdf._heading(2, "3.2 \u041f\u0440\u043e\u0435\u043a\u0442\u043d\u0438 \u043a\u043e\u043c\u043f\u0440\u043e\u043c\u0438\u0441\u0438")
+
+    pdf._heading(3, "SQLite \u0441\u0440\u0435\u0449\u0443 PostgreSQL")
     pdf._body(
-        "When a doctor updates their schedule, the system checks all scheduled appointments "
-        "against the new effective hours and rejects the change if any appointment would be "
-        "orphaned. An alternative design would flag or auto-cancel conflicting appointments, "
-        "but the reject-with-422 approach was chosen for safety: no patient loses a booking "
-        "without explicit action."
+        "SQLite \u0435 \u0438\u0437\u0431\u0440\u0430\u043d \u0437\u0430\u0440\u0430\u0434\u0438 \u043f\u0440\u043e\u0441\u0442\u043e\u0442\u0430\u0442\u0430 (\u043d\u0443\u043b\u0435\u0432\u0430 \u043a\u043e\u043d\u0444\u0438\u0433\u0443\u0440\u0430\u0446\u0438\u044f, \u0444\u0430\u0439\u043b\u043e\u0432\u043e \u0431\u0430\u0437\u0438\u0440\u0430\u043d). "
+        "\u0422\u043e\u0432\u0430 \u043e\u0442\u0433\u043e\u0432\u0430\u0440\u044f \u043d\u0430 \u043e\u0431\u0445\u0432\u0430\u0442\u0430 \u043d\u0430 \u043f\u0440\u043e\u0435\u043a\u0442\u0430, \u043d\u043e \u043e\u0433\u0440\u0430\u043d\u0438\u0447\u0430\u0432\u0430 \u0435\u0434\u043d\u043e\u0432\u0440\u0435\u043c\u0435\u043d\u043d\u0438\u044f \u0437\u0430\u043f\u0438\u0441 \u0438 \u043d\u0430\u043f\u0440\u0435\u0434\u043d\u0430\u043b\u0438\u0442\u0435 "
+        "\u0444\u0443\u043d\u043a\u0446\u0438\u0438. \u0410\u0441\u0438\u043d\u0445\u0440\u043e\u043d\u043d\u0438\u044f\u0442 \u0434\u0440\u0430\u0439\u0432\u0435\u0440 (aiosqlite) \u043e\u0431\u0432\u0438\u0432\u0430 \u0441\u0438\u043d\u0445\u0440\u043e\u043d\u043d\u0438\u044f SQLite \u0432 thread pool. "
+        "\u041c\u0438\u0433\u0440\u0430\u0446\u0438\u044f \u043a\u044a\u043c PostgreSQL \u0438\u0437\u0438\u0441\u043a\u0432\u0430 \u0441\u0430\u043c\u043e \u043f\u0440\u043e\u043c\u044f\u043d\u0430 \u043d\u0430 DATABASE_URL \u0438 \u0438\u043d\u0441\u0442\u0430\u043b\u0438\u0440\u0430\u043d\u0435 \u043d\u0430 asyncpg; "
+        "\u0432\u0441\u0438\u0447\u043a\u0438 \u0437\u0430\u044f\u0432\u043a\u0438 \u0438\u0437\u043f\u043e\u043b\u0437\u0432\u0430\u0442 ORM \u0438 \u0441\u0430 \u043d\u0435\u0437\u0430\u0432\u0438\u0441\u0438\u043c\u0438 \u043e\u0442 \u0431\u0430\u0437\u0430\u0442\u0430."
     )
 
-    pdf._heading(3, "JWT Without Refresh Tokens")
+    pdf._heading(3, "\u041d\u0435\u0437\u0430\u0431\u0430\u0432\u043d\u043e \u043f\u0440\u043e\u043c\u043e\u0442\u0438\u0440\u0430\u043d\u0435 \u043d\u0430 \u043f\u043e\u0441\u0442\u043e\u044f\u043d\u043d\u0438 \u043f\u0440\u043e\u043c\u0435\u043d\u0438")
     pdf._body(
-        "The current auth system issues a single access token with a 60-minute expiry. "
-        "There is no refresh token flow. This simplifies the implementation but means "
-        "clients must re-authenticate after expiry. Adding refresh tokens would be a "
-        "natural enhancement for production use."
+        "\u041f\u043e\u0441\u0442\u043e\u044f\u043d\u043d\u0438\u0442\u0435 \u043f\u0440\u043e\u043c\u0435\u043d\u0438 \u043d\u0430 \u0433\u0440\u0430\u0444\u0438\u043a\u0430 \u0441\u0435 \u043f\u0440\u043e\u043c\u043e\u0442\u0438\u0440\u0430\u0442 \u043a\u044a\u043c working_hours \u043f\u0440\u0438 \u0441\u0442\u0430\u0440\u0442\u0438\u0440\u0430\u043d\u0435 (lifespan) "
+        "\u0438 \u043f\u0440\u0435\u0434\u0438 \u0432\u0441\u044f\u043a\u043e \u0438\u0437\u0432\u0438\u043a\u0432\u0430\u043d\u0435 \u043d\u0430 get_effective_schedule(). \u0422\u043e\u0432\u0430 \u0435 \u043f\u0440\u043e\u0441\u0442\u043e \u0438 \u043a\u043e\u0440\u0435\u043a\u0442\u043d\u043e, "
+        "\u043d\u043e \u0438\u0437\u043f\u044a\u043b\u043d\u044f\u0432\u0430 \u0433\u043b\u043e\u0431\u0430\u043b\u043d\u043e \u0441\u043a\u0430\u043d\u0438\u0440\u0430\u043d\u0435 \u043d\u0430 \u0432\u0441\u0438\u0447\u043a\u0438 \u043d\u0435\u043f\u0440\u0438\u043b\u043e\u0436\u0435\u043d\u0438 \u043f\u0440\u043e\u043c\u0435\u043d\u0438 \u043f\u0440\u0438 \u0432\u0441\u044f\u043a\u043e \u0447\u0435\u0442\u0435\u043d\u0435 \u043d\u0430 \u0433\u0440\u0430\u0444\u0438\u043a. "
+        "\u0417\u0430 \u043f\u0440\u043e\u0435\u043a\u0442 \u0432 \u0442\u043e\u0437\u0438 \u043c\u0430\u0449\u0430\u0431 \u0442\u043e\u0432\u0430 \u0435 \u043d\u0435\u0437\u043d\u0430\u0447\u0438\u0442\u0435\u043b\u043d\u043e; \u043f\u0440\u0438 \u043c\u0430\u0449\u0430\u0431\u0438\u0440\u0430\u043d\u0435 \u0431\u0438 \u0431\u0438\u043b \u043f\u043e-\u043f\u043e\u0434\u0445\u043e\u0434\u044f\u0449 "
+        "\u0444\u043e\u043d\u043e\u0432 \u043f\u043b\u0430\u043d\u0438\u0440\u043e\u0432\u0447\u0438\u043a (Celery beat, APScheduler \u0438\u043b\u0438 cron)."
     )
 
-    # ── 3.3 Areas for Improvement ────────────────────────────────────
-    pdf._heading(2, "3.3 Areas for Improvement")
+    pdf._heading(3, "\u041f\u0440\u043e\u0432\u0435\u0440\u043a\u0430 \u0437\u0430 \u043a\u043e\u043d\u0444\u043b\u0438\u043a\u0442\u0438 \u043f\u0440\u0438 \u043f\u0440\u043e\u043c\u044f\u043d\u0430 \u043d\u0430 \u0433\u0440\u0430\u0444\u0438\u043a\u0430")
+    pdf._body(
+        "\u041a\u043e\u0433\u0430\u0442\u043e \u043b\u0435\u043a\u0430\u0440 \u0430\u043a\u0442\u0443\u0430\u043b\u0438\u0437\u0438\u0440\u0430 \u0433\u0440\u0430\u0444\u0438\u043a\u0430 \u0441\u0438, \u0441\u0438\u0441\u0442\u0435\u043c\u0430\u0442\u0430 \u043f\u0440\u043e\u0432\u0435\u0440\u044f\u0432\u0430 \u0432\u0441\u0438\u0447\u043a\u0438 \u043f\u043b\u0430\u043d\u0438\u0440\u0430\u043d\u0438 \u0437\u0430\u043f\u0438\u0441\u0432\u0430\u043d\u0438\u044f "
+        "\u0441\u043f\u0440\u044f\u043c\u043e \u043d\u043e\u0432\u0438\u0442\u0435 \u0435\u0444\u0435\u043a\u0442\u0438\u0432\u043d\u0438 \u0447\u0430\u0441\u043e\u0432\u0435 \u0438 \u043e\u0442\u0445\u0432\u044a\u0440\u043b\u044f \u043f\u0440\u043e\u043c\u044f\u043d\u0430\u0442\u0430 \u0430\u043a\u043e \u043d\u044f\u043a\u043e\u0435 \u0437\u0430\u043f\u0438\u0441\u0432\u0430\u043d\u0435 \u0431\u0438 \u043e\u0441\u0442\u0430\u043d\u0430\u043b\u043e \u0431\u0435\u0437 \u043f\u043e\u043a\u0440\u0438\u0442\u0438\u0435. "
+        "\u0410\u043b\u0442\u0435\u0440\u043d\u0430\u0442\u0438\u0432\u0435\u043d \u043f\u043e\u0434\u0445\u043e\u0434 \u0431\u0438 \u0431\u0438\u043b \u0430\u0432\u0442\u043e\u043c\u0430\u0442\u0438\u0447\u043d\u0430 \u043e\u0442\u043c\u044f\u043d\u0430 \u043d\u0430 \u043a\u043e\u043d\u0444\u043b\u0438\u043a\u0442\u0443\u0432\u0430\u0449\u0438\u0442\u0435 \u0437\u0430\u043f\u0438\u0441\u0432\u0430\u043d\u0438\u044f, "
+        "\u043d\u043e \u043f\u043e\u0434\u0445\u043e\u0434\u044a\u0442 \u0441 \u043e\u0442\u0445\u0432\u044a\u0440\u043b\u044f\u043d\u0435 (422) \u0435 \u0438\u0437\u0431\u0440\u0430\u043d \u0437\u0430 \u0431\u0435\u0437\u043e\u043f\u0430\u0441\u043d\u043e\u0441\u0442: \u043d\u0438\u043a\u043e\u0439 \u043f\u0430\u0446\u0438\u0435\u043d\u0442 \u043d\u0435 \u0433\u0443\u0431\u0438 "
+        "\u0437\u0430\u043f\u0438\u0441\u0432\u0430\u043d\u0435 \u0431\u0435\u0437 \u044f\u0432\u043d\u043e \u0434\u0435\u0439\u0441\u0442\u0432\u0438\u0435."
+    )
+
+    pdf._heading(3, "JWT \u0431\u0435\u0437 refresh \u0442\u043e\u043a\u0435\u043d\u0438")
+    pdf._body(
+        "\u0422\u0435\u043a\u0443\u0449\u0430\u0442\u0430 \u0441\u0438\u0441\u0442\u0435\u043c\u0430 \u0437\u0430 \u0430\u0443\u0442\u0435\u043d\u0442\u0438\u043a\u0430\u0446\u0438\u044f \u0438\u0437\u0434\u0430\u0432\u0430 \u0435\u0434\u0438\u043d access token \u0441 60-\u043c\u0438\u043d\u0443\u0442\u0435\u043d \u0441\u0440\u043e\u043a. "
+        "\u041d\u044f\u043c\u0430 refresh token \u043f\u043e\u0442\u043e\u043a. \u0422\u043e\u0432\u0430 \u043e\u043f\u0440\u043e\u0441\u0442\u044f\u0432\u0430 \u0438\u043c\u043f\u043b\u0435\u043c\u0435\u043d\u0442\u0430\u0446\u0438\u044f\u0442\u0430, \u043d\u043e \u043e\u0437\u043d\u0430\u0447\u0430\u0432\u0430, \u0447\u0435 "
+        "\u043a\u043b\u0438\u0435\u043d\u0442\u0438\u0442\u0435 \u0442\u0440\u044f\u0431\u0432\u0430 \u0434\u0430 \u0441\u0435 \u0430\u0443\u0442\u0435\u043d\u0442\u0438\u043a\u0438\u0440\u0430\u0442 \u043e\u0442\u043d\u043e\u0432\u043e \u0441\u043b\u0435\u0434 \u0438\u0437\u0442\u0438\u0447\u0430\u043d\u0435. \u0414\u043e\u0431\u0430\u0432\u044f\u043d\u0435\u0442\u043e \u043d\u0430 refresh \u0442\u043e\u043a\u0435\u043d\u0438 "
+        "\u0431\u0438 \u0431\u0438\u043b\u043e \u0435\u0441\u0442\u0435\u0441\u0442\u0432\u0435\u043d\u043e \u043f\u043e\u0434\u043e\u0431\u0440\u0435\u043d\u0438\u0435 \u0437\u0430 \u043f\u0440\u043e\u0438\u0437\u0432\u043e\u0434\u0441\u0442\u0432\u0435\u043d\u0430 \u0443\u043f\u043e\u0442\u0440\u0435\u0431\u0430."
+    )
+
+    # -- 3.3 Areas for Improvement
+    pdf._heading(2, "3.3 \u041e\u0431\u043b\u0430\u0441\u0442\u0438 \u0437\u0430 \u043f\u043e\u0434\u043e\u0431\u0440\u0435\u043d\u0438\u0435")
 
     pdf._bullet(
-        "Pagination consistency: Use cursor-based pagination instead of offset/limit "
-        "for better performance on large datasets."
+        "\u041f\u0430\u0433\u0438\u043d\u0430\u0446\u0438\u044f: \u0418\u0437\u043f\u043e\u043b\u0437\u0432\u0430\u043d\u0435 \u043d\u0430 cursor-based \u043f\u0430\u0433\u0438\u043d\u0430\u0446\u0438\u044f \u0432\u043c\u0435\u0441\u0442\u043e offset/limit "
+        "\u0437\u0430 \u043f\u043e-\u0434\u043e\u0431\u0440\u0430 \u043f\u0440\u043e\u0438\u0437\u0432\u043e\u0434\u0438\u0442\u0435\u043b\u043d\u043e\u0441\u0442 \u043f\u0440\u0438 \u0433\u043e\u043b\u0435\u043c\u0438 \u043d\u0430\u0431\u043e\u0440\u0438 \u043e\u0442 \u0434\u0430\u043d\u043d\u0438."
     )
     pdf._bullet(
-        "Rate limiting: No rate limiting is implemented. Production deployments should "
-        "add middleware or reverse-proxy-level throttling."
+        "Rate limiting: \u041d\u044f\u043c\u0430 \u043e\u0433\u0440\u0430\u043d\u0438\u0447\u0435\u043d\u0438\u0435 \u043d\u0430 \u0447\u0435\u0441\u0442\u043e\u0442\u0430\u0442\u0430 \u043d\u0430 \u0437\u0430\u044f\u0432\u043a\u0438\u0442\u0435. \u041f\u0440\u043e\u0438\u0437\u0432\u043e\u0434\u0441\u0442\u0432\u0435\u043d\u0438 \u0434\u0435\u043f\u043b\u043e\u0439\u043c\u0435\u043d\u0442\u0438 "
+        "\u0442\u0440\u044f\u0431\u0432\u0430 \u0434\u0430 \u0434\u043e\u0431\u0430\u0432\u044f\u0442 middleware \u0438\u043b\u0438 throttling \u043d\u0430 \u043d\u0438\u0432\u043e reverse proxy."
     )
     pdf._bullet(
-        "Refresh tokens: Implement a token refresh flow to improve UX without "
-        "compromising security."
+        "Refresh \u0442\u043e\u043a\u0435\u043d\u0438: \u0418\u043c\u043f\u043b\u0435\u043c\u0435\u043d\u0442\u0438\u0440\u0430\u043d\u0435 \u043d\u0430 \u043f\u043e\u0442\u043e\u043a \u0437\u0430 \u043e\u043f\u0440\u0435\u0441\u043d\u044f\u0432\u0430\u043d\u0435 \u043d\u0430 \u0442\u043e\u043a\u0435\u043d\u0438 "
+        "\u0437\u0430 \u043f\u043e-\u0434\u043e\u0431\u0440\u043e \u043f\u043e\u0442\u0440\u0435\u0431\u0438\u0442\u0435\u043b\u0441\u043a\u043e \u0438\u0437\u0436\u0438\u0432\u044f\u0432\u0430\u043d\u0435."
     )
     pdf._bullet(
-        "Email notifications: Notify patients and doctors on appointment creation, "
-        "cancellation, and schedule changes."
+        "\u0418\u043c\u0435\u0439\u043b \u0438\u0437\u0432\u0435\u0441\u0442\u0438\u044f: \u0423\u0432\u0435\u0434\u043e\u043c\u044f\u0432\u0430\u043d\u0435 \u043d\u0430 \u043f\u0430\u0446\u0438\u0435\u043d\u0442\u0438 \u0438 \u043b\u0435\u043a\u0430\u0440\u0438 \u043f\u0440\u0438 \u0441\u044a\u0437\u0434\u0430\u0432\u0430\u043d\u0435, "
+        "\u043e\u0442\u043c\u044f\u043d\u0430 \u0438 \u043f\u0440\u043e\u043c\u044f\u043d\u0430 \u043d\u0430 \u0433\u0440\u0430\u0444\u0438\u043a."
     )
     pdf._bullet(
-        "Admin endpoints: No admin role exists. Adding one would enable centralized "
-        "management of users, appointments, and schedules."
+        "\u0410\u0434\u043c\u0438\u043d \u043a\u0440\u0430\u0439\u043d\u0438 \u0442\u043e\u0447\u043a\u0438: \u041d\u044f\u043c\u0430 \u0430\u0434\u043c\u0438\u043d \u0440\u043e\u043b\u044f. \u0414\u043e\u0431\u0430\u0432\u044f\u043d\u0435\u0442\u043e \u0439 \u0431\u0438 \u043f\u043e\u0437\u0432\u043e\u043b\u0438\u043b\u043e "
+        "\u0446\u0435\u043d\u0442\u0440\u0430\u043b\u0438\u0437\u0438\u0440\u0430\u043d\u043e \u0443\u043f\u0440\u0430\u0432\u043b\u0435\u043d\u0438\u0435."
     )
     pdf._bullet(
-        "Soft-delete and audit trail: Cancelled appointments set a status flag, but "
-        "other entities use hard deletes. A comprehensive audit log would improve "
-        "traceability."
+        "Soft-delete \u0438 \u043e\u0434\u0438\u0442\u0435\u043d \u0441\u043b\u0435\u0434: \u041e\u0442\u043c\u0435\u043d\u0435\u043d\u0438\u0442\u0435 \u0437\u0430\u043f\u0438\u0441\u0432\u0430\u043d\u0438\u044f \u0438\u0437\u043f\u043e\u043b\u0437\u0432\u0430\u0442 \u0444\u043b\u0430\u0433 \u0437\u0430 \u0441\u0442\u0430\u0442\u0443\u0441, "
+        "\u043d\u043e \u0434\u0440\u0443\u0433\u0438\u0442\u0435 \u0435\u043d\u0442\u0438\u0442\u0435\u0442\u0438 \u0441\u0435 \u0438\u0437\u0442\u0440\u0438\u0432\u0430\u0442 \u043d\u0430\u043f\u044a\u043b\u043d\u043e. \u041e\u0434\u0438\u0442\u0435\u043d \u043b\u043e\u0433 \u0431\u0438 \u043f\u043e\u0434\u043e\u0431\u0440\u0438\u043b \u043f\u0440\u043e\u0441\u043b\u0435\u0434\u0438\u043c\u043e\u0441\u0442\u0442\u0430."
     )
     pdf._bullet(
-        "Timezone handling: All datetimes are stored and processed in UTC. "
-        "Client-side timezone conversion is left to the consumer. An explicit "
-        "timezone-aware API (accepting IANA tz names) would improve usability."
+        "\u0427\u0430\u0441\u043e\u0432\u0438 \u0437\u043e\u043d\u0438: \u0412\u0441\u0438\u0447\u043a\u0438 \u0434\u0430\u0442\u0438 \u0441\u0435 \u0441\u044a\u0445\u0440\u0430\u043d\u044f\u0432\u0430\u0442 \u0432 UTC. "
+        "\u041a\u043e\u043d\u0432\u0435\u0440\u0442\u0438\u0440\u0430\u043d\u0435\u0442\u043e \u0441\u0435 \u043e\u0441\u0442\u0430\u0432\u044f \u043d\u0430 \u043a\u043b\u0438\u0435\u043d\u0442\u0430. \u042f\u0432\u043d\u043e timezone-aware API "
+        "\u0431\u0438 \u043f\u043e\u0434\u043e\u0431\u0440\u0438\u043b\u043e \u0443\u043f\u043e\u0442\u0440\u0435\u0431\u0438\u043c\u043e\u0441\u0442\u0442\u0430."
     )
     pdf._bullet(
-        "Background job for promotions: Replace the on-demand "
-        "apply_pending_permanent_changes with a dedicated scheduler to avoid "
-        "per-request overhead at scale."
+        "\u0424\u043e\u043d\u043e\u0432\u0430 \u0437\u0430\u0434\u0430\u0447\u0430 \u0437\u0430 \u043f\u0440\u043e\u043c\u043e\u0446\u0438\u0438: \u0417\u0430\u043c\u044f\u043d\u0430 \u043d\u0430 on-demand "
+        "apply_pending_permanent_changes \u0441 \u0444\u043e\u043d\u043e\u0432 \u043f\u043b\u0430\u043d\u0438\u0440\u043e\u0432\u0447\u0438\u043a."
     )
     pdf._bullet(
-        "Docker health checks: The Dockerfile and docker-compose.yml do not include "
-        "a HEALTHCHECK directive. Adding one would improve container orchestration."
+        "Docker health checks: Dockerfile \u0438 docker-compose.yml \u043d\u044f\u043c\u0430\u0442 "
+        "HEALTHCHECK \u0434\u0438\u0440\u0435\u043a\u0442\u0438\u0432\u0430."
     )
     pdf._bullet(
-        "API versioning: All routes are currently unversioned (/auth, /doctors, etc.). "
-        "Prefixing with /v1/ would enable backward-compatible evolution."
+        "API \u0432\u0435\u0440\u0441\u0438\u043e\u043d\u0438\u0440\u0430\u043d\u0435: \u0412\u0441\u0438\u0447\u043a\u0438 \u043c\u0430\u0440\u0448\u0440\u0443\u0442\u0438 \u0441\u0430 \u0431\u0435\u0437 \u0432\u0435\u0440\u0441\u0438\u044f. "
+        "\u041f\u0440\u0435\u0444\u0438\u043a\u0441 /v1/ \u0431\u0438 \u043f\u043e\u0437\u0432\u043e\u043b\u0438\u043b \u043e\u0431\u0440\u0430\u0442\u043d\u043e-\u0441\u044a\u0432\u043c\u0435\u0441\u0442\u0438\u043c\u0430 \u0435\u0432\u043e\u043b\u044e\u0446\u0438\u044f."
     )
 
-    # ── Output ───────────────────────────────────────────────────────
+    # -- Output
     os.makedirs(os.path.dirname(output_path), exist_ok=True)
     pdf.output(output_path)
     print(f"PDF generated: {output_path}")
