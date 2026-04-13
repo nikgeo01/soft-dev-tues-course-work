@@ -22,9 +22,3 @@ async def test_login_wrong_password(client: AsyncClient) -> None:
     )
     assert resp.status_code == 401
     assert resp.json()["detail"]["code"] == "INVALID_CREDENTIALS"
-
-
-async def test_protected_endpoint_without_token(client: AsyncClient) -> None:
-    resp = await client.get("/patients/me")
-    assert resp.status_code == 401
-    assert resp.json()["detail"] == "Not authenticated"

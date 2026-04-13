@@ -21,6 +21,7 @@ from app.common.exceptions import (
 )
 from app.patients.models import Patient
 from app.schedules.service import get_effective_schedule
+from app.schedules.slot_fitting import appointment_interval_fits_working_slots
 
 
 def _to_response(appointment: Appointment) -> AppointmentResponse:
@@ -75,15 +76,7 @@ async def create_appointment(
         )
 
     effective_slots = await get_effective_schedule(db, data.doctor_id, start_dt.date())
-    start_time = start_dt.timetz().replace(tzinfo=None)
-    end_time = end_dt.timetz().replace(tzinfo=None)
-    fits_working_slot = any(
-        (not slot.is_break)
-        and slot.start_time <= start_time
-        and slot.end_time >= end_time
-        for slot in effective_slots
-    )
-    if not fits_working_slot:
+    if not appointment_interval_fits_working_slots(start_dt, end_dt, effective_slots):
         raise BusinessRuleException(
             code="OUTSIDE_WORKING_HOURS",
             message="Appointment is outside the doctor's effective working hours.",

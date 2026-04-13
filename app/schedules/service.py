@@ -11,7 +11,11 @@ from app.common.exceptions import (
     ConflictException,
     NotFoundException,
 )
+from app.database import async_session
 from app.doctors.models import Doctor
+from app.schedules.appointment_conflicts import (
+    assert_scheduled_appointments_still_fit_effective_schedule,
+)
 from app.schedules.models import (
     PermanentChange,
     PermanentChangeHours,
@@ -85,6 +89,12 @@ async def update_working_hours(
                 is_break=slot.is_break,
             )
         )
+    await db.flush()
+    try:
+        await assert_scheduled_appointments_still_fit_effective_schedule(db, doctor_id)
+    except BaseException:
+        await db.rollback()
+        raise
     await db.commit()
     return await get_working_hours(db, doctor_id)
 
@@ -129,6 +139,12 @@ async def create_temporary_override(
             )
         )
 
+    await db.flush()
+    try:
+        await assert_scheduled_appointments_still_fit_effective_schedule(db, doctor_id)
+    except BaseException:
+        await db.rollback()
+        raise
     await db.commit()
 
     override_result = await db.execute(
@@ -167,6 +183,8 @@ async def get_effective_schedule(
     target_date: date,
 ) -> list[TimeSlotResponse]:
     await _ensure_doctor_exists(db, doctor_id)
+    async with async_session() as promotion_session:
+        await apply_pending_permanent_changes(promotion_session)
     weekday = target_date.weekday()
     day_start = datetime.combine(target_date, datetime.min.time())
 
@@ -246,6 +264,12 @@ async def create_permanent_change(
             )
         )
 
+    await db.flush()
+    try:
+        await assert_scheduled_appointments_still_fit_effective_schedule(db, doctor_id)
+    except BaseException:
+        await db.rollback()
+        raise
     await db.commit()
 
     change_result = await db.execute(
